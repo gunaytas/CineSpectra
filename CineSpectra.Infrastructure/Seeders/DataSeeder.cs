@@ -2,6 +2,7 @@
 using CineSpectra.Domain.Enums;
 using CineSpectra.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using TMDbLib.Client;
 using TMDbLib.Objects.Search;
 using TMDbLib.Objects.TvShows;
@@ -9,11 +10,16 @@ using TMDbLib.Objects.People;
 
 namespace CineSpectra.Infrastructure.Seeders
 {
-    public static class DataSeeder
+    public class DataSeeder
     {
-        private const string TmdbApiKey = Configuration["TMDb:ApiKey"];
+        private readonly string _tmdbApiKey;
 
-        public static async Task SeedAsync(CineSpectraDbContext context)
+        public DataSeeder(IConfiguration configuration)
+        {
+            _tmdbApiKey = configuration["TMDb:ApiKey"] ?? throw new ArgumentNullException("TMDb API Key bulunamadı!");
+        }
+
+        public async Task SeedAsync(CineSpectraDbContext context)
         {
             await context.Database.MigrateAsync();
 
@@ -40,7 +46,7 @@ namespace CineSpectra.Infrastructure.Seeders
             {
                 var people = new Person();
 
-                var client = new TMDbClient(TmdbApiKey);
+                var client = new TMDbClient(_tmdbApiKey);
 
                 var popularTvShows = await client.GetTvShowPopularAsync(language: "tr-TR");
 
@@ -76,7 +82,19 @@ namespace CineSpectra.Infrastructure.Seeders
                             ?? "Bilinmeyen Yönetmen";
                         var companyName = tmdbShow.ProductionCompanies?.FirstOrDefault()?.Name ?? "Bilinmeyen Yapım Şirketi";
 
-                        
+                        var writerNames = tmdbShow.CreatedBy?.Select(c => c.Name).ToList() ?? new List<string?>();
+
+                        if (!writerNames.Any() && tmdbShow.Credits?.Crew != null)
+                        {
+                            writerNames = tmdbShow.Credits.Crew
+                                .Where(c => c.Job == "Writer")
+                                .Select(c => c.Name)
+                                .Distinct()
+                                .ToList();
+                        }
+
+                        string finalWriters = writerNames.Any() ? string.Join(", ", writerNames) : "Bilinmeyen Senarist";
+
                         var newShow = new Show
                         {
                             Title = tmdbShow.Name ?? "Adsız Yapım",
@@ -90,7 +108,9 @@ namespace CineSpectra.Infrastructure.Seeders
                             Director = directorName,
                             ProductionCompany = companyName,
                             AverageScore = 0.0,
-                            Genres = showGenres
+                            Genres = showGenres,
+                            Writers = finalWriters,
+                            ReleaseDate = tmdbShow.FirstAirDate
                         };
 
                         await context.Shows.AddAsync(newShow);
@@ -156,6 +176,54 @@ namespace CineSpectra.Infrastructure.Seeders
                                 }
 
                                 await context.SaveChangesAsync();
+                            }
+                        }
+
+                        if (tmdbShow.Seasons != null)
+                        {
+                            foreach (var tmdbSeason in tmdbShow.Seasons)
+                            {
+                                if (tmdbSeason.SeasonNumber == 0) continue;
+
+                                var fullSeasonDetails = await client.GetTvSeasonAsync((int)tmdbShow.Id, tmdbSeason.SeasonNumber);
+
+                                if (fullSeasonDetails != null)
+                                {
+                                    var newSeason = new Season
+                                    {
+                                        ShowId = newShow.Id, 
+                                        SeasonNumber = fullSeasonDetails.SeasonNumber,
+                                        Name = fullSeasonDetails.Name ?? $"{fullSeasonDetails.SeasonNumber}. Sezon",
+                                        Overview = fullSeasonDetails.Overview ?? "Sezon açıklaması bulunamadı.",
+                                        PosterPath = string.IsNullOrEmpty(fullSeasonDetails.PosterPath)
+                                            ? "https://via.placeholder.com/500x750?text=No+Image"
+                                            : $"https://image.tmdb.org/t/p/w500{fullSeasonDetails.PosterPath}",
+                                        AverageScore = 0.0 
+                                    };
+
+                                    context.Seasons.Add(newSeason);
+                                    await context.SaveChangesAsync(); 
+
+                                    if (fullSeasonDetails.Episodes != null)
+                                    {
+                                        foreach (var tmdbEpisode in fullSeasonDetails.Episodes)
+                                        {
+                                            var newEpisode = new Episode
+                                            {
+                                                SeasonId = newSeason.Id, 
+                                                EpisodeNumber = (int)tmdbEpisode.EpisodeNumber,
+                                                Title = tmdbEpisode.Name ?? $"{tmdbEpisode.EpisodeNumber}. Bölüm",
+                                                Overview = tmdbEpisode.Overview ?? "Bölüm açıklaması bulunamadı.",
+                                                AirDate = tmdbEpisode.AirDate,
+                                                AverageScore = 0.0
+                                            };
+
+                                            context.Episodes.Add(newEpisode);
+                                        }
+
+                                        await context.SaveChangesAsync();
+                                    }
+                                }
                             }
                         }
                     }
