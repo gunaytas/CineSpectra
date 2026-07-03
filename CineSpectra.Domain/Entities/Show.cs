@@ -14,6 +14,7 @@ namespace CineSpectra.Domain.Entities
         public string Title { get; set; } = string.Empty; 
         public string? Description { get; set; }
         public string? Director { get; set; }
+        public string? Writers { get; set; }
         public string? ProductionCompany { get; set; }
         public string? CoverImageUrl { get; set; }
         public MediaType Type { get; set; }
@@ -22,10 +23,11 @@ namespace CineSpectra.Domain.Entities
         public int? EpisodesCount { get; set; } // sadece dizi için geçerli, film için null olabilir
 
         public double AverageScore { get; set; } = 0.0;
+        public DateTime? ReleaseDate { get; set; }
 
         public ICollection<Actor> Actors { get; set; } = new List<Actor>(); 
         public ICollection<Character> Characters { get; set; } = new List<Character>();
-        public ICollection<ShowRating> Ratings { get; set; } = new List<ShowRating>();
         public ICollection<Genre> Genres { get; set; } = new List<Genre>();
+        public ICollection<Season> Seasons { get; set; } = new List<Season>();
     }
 }

@@ -12,7 +12,7 @@ namespace CineSpectra.Domain.Entities
     {
         public string Name { get; set; } = string.Empty;
         public string? Biography { get; set; }
-        public int Age { get; set; }
+        public DateTime? BirthDate { get; set; }
         public double AverageScore { get; set; } = 0.0;
         public string? ProfileImageUrl { get; set; }
 

@@ -16,12 +16,14 @@ public class CineSpectraDbContext : DbContext
     }
 
     public DbSet<Show> Shows => Set<Show>();
+    public DbSet<Season> Seasons => Set<Season>(); 
+    public DbSet<Episode> Episodes => Set<Episode>();
     public DbSet<Actor> Actors => Set<Actor>();
     public DbSet<Character> Characters => Set<Character>();
     public DbSet<RatingCriteria> RatingCriterias => Set<RatingCriteria>();
     public DbSet<Genre> Genres => Set<Genre>();
 
-    public DbSet<ShowRating> ShowRatings => Set<ShowRating>();
+    public DbSet<MediaRating> MediaRatings => Set<MediaRating>();
     public DbSet<CharacterRating> CharacterRatings => Set<CharacterRating>();
     public DbSet<ActorRating> ActorRatings => Set<ActorRating>();
 
@@ -29,15 +31,34 @@ public class CineSpectraDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Show>(entity =>
-        {
+        modelBuilder.Entity<Show>(entity => {
             entity.ToTable("Shows");
             entity.HasKey(s => s.Id);
             entity.Property(s => s.Title).HasMaxLength(255).IsRequired();
             entity.Property(s => s.CoverImageUrl).HasMaxLength(500);
             entity.Property(s => s.Type).IsRequired();
-
             entity.Property(s => s.AverageScore).HasDefaultValue(0.0);
+        });
+
+        modelBuilder.Entity<Season>(entity => {
+            entity.ToTable("Seasons");
+            entity.HasKey(s => s.Id);
+
+            entity.HasOne(s => s.Show)
+                  .WithMany(sh => sh.Seasons)
+                  .HasForeignKey(s => s.ShowId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Episode>(entity => {
+            entity.ToTable("Episodes");
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Season)
+                  .WithMany(s => s.Episodes)
+                  .HasForeignKey(e => e.SeasonId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
         });
 
         modelBuilder.Entity<Actor>(entity =>
@@ -46,6 +67,7 @@ public class CineSpectraDbContext : DbContext
             entity.HasKey(a => a.Id);
             entity.Property(a => a.Name).HasMaxLength(255).IsRequired();
             entity.Property(a => a.AverageScore).HasDefaultValue(0.0);
+            entity.Property(a => a.BirthDate).IsRequired(false);
 
             entity.HasMany(c => c.Shows)
                   .WithMany(s => s.Actors)
@@ -55,8 +77,6 @@ public class CineSpectraDbContext : DbContext
                       j => j.HasOne<Actor>().WithMany().HasForeignKey("ActorId").OnDelete(DeleteBehavior.Cascade)
                   );
         });
-
-
 
         modelBuilder.Entity<Character>(entity =>
         {
@@ -74,7 +94,7 @@ public class CineSpectraDbContext : DbContext
             entity.HasMany(c => c.Shows)
                   .WithMany(s => s.Characters)
                   .UsingEntity<Dictionary<string, object>>(
-                      "ShowCharacters", // Veritabanındaki fiziksel ara tablo adı
+                      "ShowCharacters", 
                       j => j.HasOne<Show>().WithMany().HasForeignKey("ShowId").OnDelete(DeleteBehavior.Cascade),
                       j => j.HasOne<Character>().WithMany().HasForeignKey("CharacterId").OnDelete(DeleteBehavior.Cascade)
                   );
@@ -103,22 +123,30 @@ public class CineSpectraDbContext : DbContext
                   );
         });
 
-        modelBuilder.Entity<ShowRating>(entity =>
-        {
-            entity.ToTable("ShowRatings");
-            entity.HasKey(sr => sr.Id);
-            entity.Property(sr => sr.UserId).HasMaxLength(255).IsRequired();
-            entity.Property(sr => sr.Score).IsRequired();
 
-            entity.HasOne(sr => sr.Show)
-                  .WithMany(s => s.Ratings)
-                  .HasForeignKey(sr => sr.ShowId)
+        modelBuilder.Entity<MediaRating>(entity => {
+            entity.ToTable("MediaRatings");
+            entity.HasKey(r => r.Id);
+
+            entity.HasOne(r => r.Criteria)
+                  .WithMany()
+                  .HasForeignKey(r => r.CriteriaId)
+                  .OnDelete(DeleteBehavior.Restrict); 
+
+            entity.HasOne(r => r.Show)
+                  .WithMany()
+                  .HasForeignKey(r => r.ShowId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(sr => sr.Criteria)
+            entity.HasOne(r => r.Season)
                   .WithMany()
-                  .HasForeignKey(sr => sr.CriteriaId)
-                  .OnDelete(DeleteBehavior.Restrict);
+                  .HasForeignKey(r => r.SeasonId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.Episode)
+                  .WithMany()
+                  .HasForeignKey(r => r.EpisodeId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<CharacterRating>(entity =>
@@ -156,5 +184,7 @@ public class CineSpectraDbContext : DbContext
                   .HasForeignKey(ar => ar.CriteriaId)
                   .OnDelete(DeleteBehavior.Restrict);
         });
+
+        
     }
 }

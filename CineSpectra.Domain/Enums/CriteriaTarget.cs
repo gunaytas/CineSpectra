@@ -10,6 +10,7 @@ namespace CineSpectra.Domain.Enums
     {
         Show = 1,
         Character = 2,
-        Actor = 3
+        Actor = 3,
+        Episode = 4
     }
 }
