@@ -482,3 +482,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+CineSpectra.WebAPI/appsettings.json
+CineSpectra.WebAPI/appsettings.Development.json

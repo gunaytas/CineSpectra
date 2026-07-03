@@ -11,7 +11,7 @@ namespace CineSpectra.Infrastructure.Seeders
 {
     public static class DataSeeder
     {
-        private const string TmdbApiKey = "a09b4cc016465e07aceb2fb6b899ea72";
+        private const string TmdbApiKey = Configuration["TMDb:ApiKey"];
 
         public static async Task SeedAsync(CineSpectraDbContext context)
         {
