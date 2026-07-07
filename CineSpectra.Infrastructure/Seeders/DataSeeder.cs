@@ -44,13 +44,11 @@ namespace CineSpectra.Infrastructure.Seeders
             // Veritabanı oluşturma
             if (!await context.Shows.AnyAsync())
             {
-                var people = new Person();
-
                 var client = new TMDbClient(_tmdbApiKey);
 
                 var popularTvShows = await client.GetTvShowPopularAsync(language: "tr-TR");
 
-                if (popularTvShows?.Results != null)
+                if (popularTvShows != null && popularTvShows.Results != null)
                 {
                     foreach (var searchTv in popularTvShows.Results.Take(5))
                     {
@@ -86,11 +84,7 @@ namespace CineSpectra.Infrastructure.Seeders
 
                         if (!writerNames.Any() && tmdbShow.Credits?.Crew != null)
                         {
-                            writerNames = tmdbShow.Credits.Crew
-                                .Where(c => c.Job == "Writer")
-                                .Select(c => c.Name)
-                                .Distinct()
-                                .ToList();
+                            writerNames = tmdbShow.Credits.Crew.Where(c => c.Job == "Writer").Select(c => c.Name).Distinct().ToList();
                         }
 
                         string finalWriters = writerNames.Any() ? string.Join(", ", writerNames) : "Bilinmeyen Senarist";
@@ -110,74 +104,12 @@ namespace CineSpectra.Infrastructure.Seeders
                             AverageScore = 0.0,
                             Genres = showGenres,
                             Writers = finalWriters,
-                            ReleaseDate = tmdbShow.FirstAirDate
+                            ReleaseDate = tmdbShow.FirstAirDate ?? new DateTime(2026, 1, 1)
                         };
 
                         await context.Shows.AddAsync(newShow);
                         await context.SaveChangesAsync();
 
-                        if (tmdbShow.Credits?.Cast != null)
-                        {
-                            foreach (var castMember in tmdbShow.Credits.Cast)
-                            {
-                                if (string.IsNullOrWhiteSpace(castMember.Name) || string.IsNullOrWhiteSpace(castMember.Character))
-                                    continue;
-                                
-                                var existingActor = await context.Actors.FirstOrDefaultAsync(a => a.Name == castMember.Name)
-                                                    ?? context.Actors.Local.FirstOrDefault(a => a.Name == castMember.Name);
-
-
-                                if (existingActor == null)
-                                {
-                                    var personDetails = await client.GetPersonAsync(castMember.Id);
-
-                                    existingActor = new Actor
-                                    {
-                                        Name = castMember.Name,
-                                        BirthDate = personDetails?.Birthday,
-                                        Biography = personDetails?.Biography ?? "Biyografi bulunamadı.",
-                                        ProfileImageUrl = string.IsNullOrEmpty(castMember.ProfilePath)
-                                            ? "https://via.placeholder.com/300x450?text=No+Image"
-                                            : $"https://image.tmdb.org/t/p/w500{castMember.ProfilePath}",
-                                        AverageScore = 0.0
-                                    };
-                                    await context.Actors.AddAsync(existingActor);
-                                    await context.SaveChangesAsync();
-                                }
-
-                                
-                                var existingCharacter = await context.Characters
-                                    .Include(c => c.Shows)
-                                    .FirstOrDefaultAsync(c => c.Name == castMember.Character && c.ActorId == existingActor.Id)
-                                    ?? context.Characters.Local
-                                    .FirstOrDefault(c => c.Name == castMember.Character && c.ActorId == existingActor.Id);
-
-                                if (existingCharacter == null)
-                                {
-                                    var newCharacter = new Character
-                                    {
-                                        Name = castMember.Character,
-                                        ImageUrl = string.IsNullOrEmpty(castMember.ProfilePath)
-                                            ? "https://via.placeholder.com/500x750?text=No+Profile"
-                                            : $"https://image.tmdb.org/t/p/w500{castMember.ProfilePath}",
-                                        ActorId = existingActor.Id,
-                                        AverageScore = 0.0
-                                    };
-
-                                    newCharacter.Shows.Add(newShow);
-                                    await context.Characters.AddAsync(newCharacter);
-                                }
-                                else
-                                {
-                                    if (!existingCharacter.Shows.Any(s => s.Id == newShow.Id))
-                                    {
-                                        existingCharacter.Shows.Add(newShow);
-                                    }
-                                }
-
-                                await context.SaveChangesAsync();
-                            }
-                        }
 
                         if (tmdbShow.Seasons != null)
                         {
@@ -226,6 +158,70 @@ namespace CineSpectra.Infrastructure.Seeders
                                 }
                             }
                         }
+
+                        if (tmdbShow.Credits?.Cast != null)
+                        {
+                            foreach (var castMember in tmdbShow.Credits.Cast)
+                            {
+                                if (string.IsNullOrWhiteSpace(castMember.Name) || string.IsNullOrWhiteSpace(castMember.Character))
+                                    continue;
+
+                                var existingActor = await context.Actors.FirstOrDefaultAsync(a => a.Name == castMember.Name)
+                                                    ?? context.Actors.Local.FirstOrDefault(a => a.Name == castMember.Name);
+
+
+                                if (existingActor == null)
+                                {
+                                    var personDetails = await client.GetPersonAsync(castMember.Id);
+
+                                    existingActor = new Actor
+                                    {
+                                        Name = castMember.Name,
+                                        BirthDate = personDetails?.Birthday,
+                                        Biography = personDetails?.Biography ?? "Biyografi bulunamadı.",
+                                        ProfileImageUrl = string.IsNullOrEmpty(castMember.ProfilePath)
+                                            ? "https://via.placeholder.com/300x450?text=No+Image"
+                                            : $"https://image.tmdb.org/t/p/w500{castMember.ProfilePath}",
+                                        AverageScore = 0.0
+                                    };
+                                    await context.Actors.AddAsync(existingActor);
+                                    await context.SaveChangesAsync();
+                                }
+
+
+                                var existingCharacter = await context.Characters
+                                    .Include(c => c.Shows)
+                                    .FirstOrDefaultAsync(c => c.Name == castMember.Character && c.ActorId == existingActor.Id)
+                                    ?? context.Characters.Local
+                                    .FirstOrDefault(c => c.Name == castMember.Character && c.ActorId == existingActor.Id);
+
+                                if (existingCharacter == null)
+                                {
+                                    var newCharacter = new Character
+                                    {
+                                        Name = castMember.Character,
+                                        ImageUrl = string.IsNullOrEmpty(castMember.ProfilePath)
+                                            ? "https://via.placeholder.com/500x750?text=No+Profile"
+                                            : $"https://image.tmdb.org/t/p/w500{castMember.ProfilePath}",
+                                        ActorId = existingActor.Id,
+                                        AverageScore = 0.0
+                                    };
+
+                                    newCharacter.Shows.Add(newShow);
+                                    await context.Characters.AddAsync(newCharacter);
+                                }
+                                else
+                                {
+                                    if (!existingCharacter.Shows.Any(s => s.Id == newShow.Id))
+                                    {
+                                        existingCharacter.Shows.Add(newShow);
+                                    }
+                                }
+
+                                await context.SaveChangesAsync();
+                            }
+                        }
+
                     }
                 }
             }
