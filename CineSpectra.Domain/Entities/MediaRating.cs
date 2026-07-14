@@ -10,12 +10,11 @@ namespace CineSpectra.Domain.Entities
     public class MediaRating : BaseEntity
     {
         public string UserId { get; set; } = string.Empty;
-        public int CriteriaId { get; set; }
-        public RatingCriteria Criteria { get; set; } = null!;
-        public int Score { get; set; } 
         public string? Comment { get; set; }
 
-        public int ShowId { get; set; } 
+        public double CalculatedRatingValue { get; set; }
+
+        public int ShowId { get; set; }
         public Show Show { get; set; } = null!;
 
         public int? SeasonId { get; set; }
@@ -23,5 +22,7 @@ namespace CineSpectra.Domain.Entities
 
         public int? EpisodeId { get; set; }
         public Episode? Episode { get; set; }
+
+        public ICollection<MediaRatingSubValue> SubValues { get; set; } = new List<MediaRatingSubValue>();
     }
 }

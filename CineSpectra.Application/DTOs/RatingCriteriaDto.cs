@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CineSpectra.Domain.Common;
 using CineSpectra.Domain.Enums;
+using CineSpectra.Domain.Entities;
 
-namespace CineSpectra.Domain.Entities
+
+namespace CineSpectra.Application.DTOs
 {
-    public class RatingCriteria : BaseEntity
+    public class RatingCriteriaDto
     {
+        public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public CriteriaTarget Target { get; set; }
         public double Weight { get; set; }
+        public CriteriaTarget Target { get; set; } 
     }
 }

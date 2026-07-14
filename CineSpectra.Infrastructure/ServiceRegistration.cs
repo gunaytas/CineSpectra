@@ -1,4 +1,5 @@
 ﻿using CineSpectra.Application.Interfaces;
+using CineSpectra.Application.Services;
 using CineSpectra.Infrastructure.Persistence;
 using CineSpectra.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,12 @@ namespace CineSpectra.Infrastructure
             services.AddScoped<IShowRepository, ShowRepository>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            services.AddScoped<IRatingCriteriaRepository, RatingCriteriaRepository>();
+
+            services.AddScoped<IShowRatingRepository, MediaRatingRepository>();
+
+            services.AddScoped<IShowRatingService, ShowRatingService>();
         }
     }
 }

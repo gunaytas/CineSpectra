@@ -8,8 +8,9 @@ namespace CineSpectra.Application.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
+        IShowRatingRepository MediaRatings { get; }
+        IRatingCriteriaRepository RatingCriterias { get; }
         IShowRepository Shows { get; }
-
         Task<int> SaveChangesAsync();
     }
 }

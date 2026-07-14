@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CineSpectra.Domain.Entities; // Kendi Show entity sınıfının yolu
+using CineSpectra.Domain.Entities;
 
 namespace CineSpectra.Application.Interfaces
 {

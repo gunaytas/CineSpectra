@@ -24,6 +24,7 @@ public class CineSpectraDbContext : DbContext
     public DbSet<Genre> Genres => Set<Genre>();
 
     public DbSet<MediaRating> MediaRatings => Set<MediaRating>();
+    public DbSet<MediaRatingSubValue> MediaRatingSubValues { get; set; }
     public DbSet<CharacterRating> CharacterRatings => Set<CharacterRating>();
     public DbSet<ActorRating> ActorRatings => Set<ActorRating>();
 
@@ -128,11 +129,6 @@ public class CineSpectraDbContext : DbContext
             entity.ToTable("MediaRatings");
             entity.HasKey(r => r.Id);
 
-            entity.HasOne(r => r.Criteria)
-                  .WithMany()
-                  .HasForeignKey(r => r.CriteriaId)
-                  .OnDelete(DeleteBehavior.Restrict); 
-
             entity.HasOne(r => r.Show)
                   .WithMany()
                   .HasForeignKey(r => r.ShowId)
@@ -147,6 +143,22 @@ public class CineSpectraDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(r => r.EpisodeId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MediaRatingSubValue>(entity =>
+        {
+            entity.ToTable("MediaRatingSubValues");
+            entity.HasKey(sv => sv.Id);
+
+            entity.HasOne(sv => sv.MediaRating)
+                  .WithMany(r => r.SubValues)
+                  .HasForeignKey(sv => sv.MediaRatingId)
+                  .OnDelete(DeleteBehavior.Cascade); 
+
+            entity.HasOne(sv => sv.Criteria)
+                  .WithMany()
+                  .HasForeignKey(sv => sv.CriteriaId)
+                  .OnDelete(DeleteBehavior.Restrict); 
         });
 
         modelBuilder.Entity<CharacterRating>(entity =>

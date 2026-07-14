@@ -11,14 +11,21 @@ namespace CineSpectra.Infrastructure.Repositories
     public class UnitOfWork : IUnitOfWork
     {
         private readonly CineSpectraDbContext _context;
-        private IShowRepository? _showRepository;
+        public IShowRepository Shows { get; private set; }
+        public IRatingCriteriaRepository RatingCriterias { get; private set; }
+        public IShowRatingRepository MediaRatings { get; private set; } 
 
-        public UnitOfWork(CineSpectraDbContext context)
+        public UnitOfWork(
+            CineSpectraDbContext context,
+            IShowRepository shows,
+            IRatingCriteriaRepository ratingCriterias,
+            IShowRatingRepository mediaRatings) 
         {
             _context = context;
+            Shows = shows;
+            RatingCriterias = ratingCriterias;
+            MediaRatings = mediaRatings; 
         }
-
-        public IShowRepository Shows => _showRepository ??= new ShowRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {
