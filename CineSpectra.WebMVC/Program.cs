@@ -1,7 +1,31 @@
+using CineSpectra.Application.Interfaces;
+using CineSpectra.Application.Services;
+using CineSpectra.Infrastructure.Persistence;
+using CineSpectra.Infrastructure.Repositories;
+using CineSpectra.WebMVC.Services;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+
+builder.Services.AddDbContext<CineSpectraDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IShowRepository, ShowRepository>();
+builder.Services.AddScoped<IShowRatingRepository, MediaRatingRepository>();
+builder.Services.AddScoped<IShowRatingService, ShowRatingService>();
+builder.Services.AddScoped<IRatingCriteriaRepository, RatingCriteriaRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IShowService, ShowService>();
+
+builder.Services.AddAutoMapper(typeof(CineSpectra.Application.Mapping.MappingProfile));
+
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddHttpClient<ApiService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7101");
+});
 
 var app = builder.Build();
 

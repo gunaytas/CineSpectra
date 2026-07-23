@@ -14,6 +14,7 @@ namespace CineSpectra.Application.DTOs
         public double AverageScore { get; set; }
         public int Type { get; set; } 
         public DateTime? ReleaseDate { get; set; }
+        public List<GenreDto> Genres { get; set; } = new();
     }
 
     public class ShowDetailDto
@@ -24,7 +25,7 @@ namespace CineSpectra.Application.DTOs
         public string? CoverImageUrl { get; set; }
         public string? Director { get; set; }
         public string? ProductionCompany { get; set; }
-        public string? Writer { get; set; } 
+        public string? Writers { get; set; } 
         public double AverageScore { get; set; }
         public int Type { get; set; }
         public DateTime? ReleaseDate { get; set; }
@@ -44,6 +45,9 @@ namespace CineSpectra.Application.DTOs
         public int Id { get; set; }
         public int SeasonNumber { get; set; }
         public string? Name { get; set; }
+        public string? Overview { get; set; }
+        public string? PosterPath { get; set; }
+        public double AverageScore { get; set; }
         public List<EpisodeDto> Episodes { get; set; } = new();
     }
 
@@ -51,7 +55,7 @@ namespace CineSpectra.Application.DTOs
     {
         public int Id { get; set; }
         public int EpisodeNumber { get; set; }
-        public string Name { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
         public double AverageScore { get; set; }
     }
 }

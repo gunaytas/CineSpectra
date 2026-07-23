@@ -1,8 +1,115 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model CineSpectra.WebMVC.Models.HomeViewModel
+@{
+    ViewData["Title"] = "Keşfet & Puanla";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@* Bu görünüm _Layout.cshtml'deki ortak tasarım sistemini kullanır.
+   Bölüm başlıkları -> Views/Shared/_SectionHeader.cshtml
+   Poster kartları  -> Views/Shared/_ShowCard.cshtml *@
+
+@if (Model.HeroShow != null)
+{
+    <section class="cs-hero min-h-[560px] w-full overflow-hidden flex items-center py-16">
+        <div class="cs-hero-media" style="background-image: url('@(string.IsNullOrEmpty(Model.HeroShow.CoverImageUrl) ? "/images/default-hero.jpg" : Model.HeroShow.CoverImageUrl)'); filter: saturate(1.08) contrast(1.05) blur(6px); transform: scale(1.04);"></div>
+        <div class="cs-hero-grade"></div>
+        <div class="cs-hero-grain"></div>
+        <div class="cs-hero-scrim-b"></div>
+        <div class="cs-hero-scrim-r"></div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full z-10">
+            <div class="flex flex-col md:flex-row items-center md:items-end justify-between gap-10 md:gap-12">
+
+                <div class="max-w-2xl">
+                    <div class="flex items-center mb-4">
+                        <span class="cs-bulbs"><span></span><span></span><span></span><span></span></span>
+                        <span class="cs-eyebrow uppercase">Şimdi Gösterimde</span>
+                    </div>
+                    <h1 class="cs-headline text-4xl sm:text-6xl font-extrabold italic tracking-tight mb-4 leading-[1.05]">
+                        @Model.HeroShow.Title
+                    </h1>
+                    <p class="text-sm sm:text-base line-clamp-3 mb-8 leading-relaxed cs-muted">
+                        @Model.HeroShow.Description
+                    </p>
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <a href="/Shows/@Model.HeroShow.Id" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info"></i> Detayları Gör
+                        </a>
+                        <a href="/Shows/@Model.HeroShow.Id#rate" class="cs-btn-ghost text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-star" style="color: var(--gold);"></i> Şimdi Puanla
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/Shows/@Model.HeroShow.Id" class="cs-card hidden sm:block flex-shrink-0 relative w-56 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl">
+                    <img src="@(string.IsNullOrEmpty(Model.HeroShow.CoverImageUrl) ? "/images/default-poster.jpg" : Model.HeroShow.CoverImageUrl)"
+                         alt="@Model.HeroShow.Title" class="h-full w-full object-cover" />
+                    <div class="cs-score absolute top-3 left-3 text-xs px-2.5 py-1 rounded-lg backdrop-blur-sm flex items-center gap-1">
+                        <i class="fa-solid fa-star"></i> @Model.HeroShow.AverageScore.ToString("0.0")
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </section>
+    <div class="cs-sprocket"></div>
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8 relative">
+    <div class="cs-glow" style="top: -120px; right: -200px;"></div>
+
+    <section class="relative">
+        @await Html.PartialAsync("_SectionHeader", new
+        {
+            Eyebrow = "Topluluk Favorileri",
+                Headline = "Öne Çıkan Yapımlar",
+                Subtitle = "CineSpectra topluluğunun en yüksek puan verdiği yapımlar"
+                })
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            @foreach (var show in Model.PopularShows)
+            {
+                @await Html.PartialAsync("_ShowCard", show)
+            }
+        </div>
+    </section>
+
+    <div class="cs-sprocket !my-14"></div>
+
+    <section>
+        @await Html.PartialAsync("_SectionHeader", new
+        {
+            Eyebrow = "Yeni Vizyonda",
+                Headline = "Yeni Eklenenler",
+                Subtitle = "Sisteme yeni eklenen ve vizyona giren güncel yapımlar"
+                })
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            @foreach (var show in Model.RecentShows.Take(5))
+            {
+                @await Html.PartialAsync("_ShowCard", show)
+            }
+        </div>
+    </section>
+
+    @foreach (var group in Model.GenreGroups)
+    {
+        <div class="cs-sprocket !my-14"></div>
+
+        <section>
+            @await Html.PartialAsync("_SectionHeader", new
+            {
+                Eyebrow = "Keşfet",
+                Headline = $"{group.GenreName} Yapımları",
+                Subtitle = (string?)null
+                })
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            @foreach (var show in group.Shows)
+                {
+                    @await Html.PartialAsync("_ShowCard", show)
+                }
+            </div>
+        </section>
+    }
+
 </div>

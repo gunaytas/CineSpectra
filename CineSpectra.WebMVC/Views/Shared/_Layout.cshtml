@@ -1,50 +1,444 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="tr" class="h-full">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CineSpectra.WebMVC</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/CineSpectra.WebMVC.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - CineSpectra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            velvet: '#150F13', curtain: '#241922', curtainLight: '#33232F',
+                            gold: '#F0B23C', ivory: '#F8F1E7', mauve: '#BBA8AF', wine: '#C24956', haze: '#E7D9C4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    @* =====================================================================
+       CINESPECTRA — TASARIM SİSTEMİ ("Gece Seansı" / Midnight Screening)
+       =====================================================================
+       Bu blok TÜM sayfalar için tek kaynak. Yeni bir sayfa (Movies, TvShows,
+       Search, Profile...) eklerken şu kalıpları kullan, yeniden icat etme:
+
+       İSKELET
+         Container:      max-w-7xl mx-auto px-4 sm:px-6 lg:px-8
+         Bölüm aralığı:  <div class="cs-sprocket"> ile bölümleri ayır
+         Bölüm başlığı:  Views/Shared/_SectionHeader.cshtml partial'ını kullan
+                         @@await Html.PartialAsync("_SectionHeader", new { Eyebrow = "...", Headline = "...", Subtitle = "..." })
+         Poster kartı:   Views/Shared/_ShowCard.cshtml partial'ını kullan
+                         @@await Html.PartialAsync("_ShowCard", show)   (show: Id, Title, CoverImageUrl, AverageScore, ReleaseDate, Type alanları olmalı)
+         Sayfa hero'su:  cs-hero > cs-hero-media + cs-hero-grain + cs-hero-grade + cs-hero-scrim-b/r
+                         (bkz. aşağıdaki sınıf tanımları — düşük çözünürlüklü
+                         backdrop görsellerini gizlemek için birlikte kullanılırlar)
+
+       RENK TOKENLARI (var(--...) veya tailwind'de brand.*)
+         --velvet   sayfa zemini (en koyu)
+         --curtain  kart / panel zemini
+         --curtain-light  kart üstü ikinci kat (badge zemini, sprocket deliği)
+         --gold     birincil vurgu (puan, CTA, eyebrow)
+         --ivory    başlık / birincil metin
+         --mauve    ikincil / açıklama metni
+         --wine     ikincil vurgu (ghost buton, nadiren kullan)
+         --haze     AÇIK ton — glow'lar, ince ayraçlar, "ferah" hissi için;
+                    büyük yüzeylerde KULLANMA, sadece ambiyans için
+
+       BİLEŞEN SINIFLARI
+         cs-eyebrow, cs-headline, cs-muted     tipografi
+         cs-card                                poster / içerik kartı (hover: kalkar + altın kenarlık)
+         cs-panel                                daha açık, "nefes alan" içerik paneli (cs-card'dan daha ferah)
+         cs-pill / cs-pill-gold                  rozetler
+         cs-btn-primary / cs-btn-ghost           butonlar
+         cs-progress-track / cs-progress-fill    ilerleme çubuğu
+         cs-glow                                 arka planda yumuşak ışık lekesi (ferahlık için, opsiyonel)
+         cs-sprocket                              imza öge: 35mm film şeridi ayracı
+       ===================================================================== *@
+    <style>
+        :root {
+            --velvet: #150F13;
+            --curtain: #241922;
+            --curtain-light: #33232F;
+            --gold: #F0B23C;
+            --gold-soft: #F0B23C33;
+            --ivory: #F8F1E7;
+            --mauve: #BBA8AF;
+            --wine: #C24956;
+            --haze: #E7D9C4;
+        }
+
+        body {
+            background-color: var(--velvet);
+            background-image: radial-gradient(140% 100% at 50% -10%, #2A1D26 0%, var(--velvet) 55%);
+            color: var(--ivory);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .cs-eyebrow {
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 0.28em;
+            color: var(--gold);
+            font-size: 0.78rem;
+        }
+
+        .cs-headline {
+            font-family: 'Playfair Display', serif;
+            color: var(--ivory);
+        }
+
+        .cs-muted {
+            color: var(--mauve);
+        }
+
+        /* Ambient film grain (whole page, very subtle) */
+        .cs-grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.04;
+            mix-blend-mode: overlay;
+            z-index: 1;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* Soft ambient glow — use behind section headers or empty hero areas for "ferah" depth */
+        .cs-glow {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            width: 640px;
+            height: 640px;
+            border-radius: 999px;
+            filter: blur(90px);
+            background: radial-gradient(circle, #F0B23C22 0%, transparent 70%);
+        }
+
+        /* Signature: 35mm sprocket-hole divider */
+        .cs-sprocket {
+            position: relative;
+            height: 22px;
+            margin: 0 auto;
+            max-width: 1280px;
+            background-image: radial-gradient(circle, var(--curtain-light) 3.5px, transparent 3.6px), radial-gradient(circle, var(--curtain-light) 3.5px, transparent 3.6px);
+            background-size: 34px 22px;
+            background-position: 0 0, 17px 0;
+            background-repeat: repeat-x;
+            opacity: 0.9;
+        }
+
+            .cs-sprocket::before, .cs-sprocket::after {
+                content: '';
+                position: absolute;
+                left: 0;
+                right: 0;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, #F0B23C22 20%, #F0B23C22 80%, transparent);
+            }
+
+            .cs-sprocket::before {
+                top: 4px;
+            }
+
+            .cs-sprocket::after {
+                bottom: 4px;
+            }
+
+        /* Marquee bulbs */
+        .cs-bulbs {
+            display: inline-flex;
+            gap: 6px;
+            margin-right: 10px;
+        }
+
+            .cs-bulbs span {
+                width: 6px;
+                height: 6px;
+                border-radius: 999px;
+                background: var(--gold);
+                box-shadow: 0 0 6px 1px var(--gold-soft);
+                animation: cs-flicker 2.4s ease-in-out infinite;
+            }
+
+                .cs-bulbs span:nth-child(2) {
+                    animation-delay: 0.3s;
+                }
+
+                .cs-bulbs span:nth-child(3) {
+                    animation-delay: 0.6s;
+                }
+
+                .cs-bulbs span:nth-child(4) {
+                    animation-delay: 0.9s;
+                }
+
+        @@keyframes cs-flicker {
+            0%, 100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        /* ---- Hero backdrop treatment ----
+                   Full-bleed backdrop photos are usually low-res relative to hero size,
+                   so upscaling makes them look soft/blocky. Instead of fighting that,
+                   we lean into a graded, filmic look: a duotone color-grade + grain
+                   disguises artifacts and reads as an intentional "cinema" treatment
+                   rather than a stretched image. Always pair cs-hero-media with
+                   cs-hero-grain + cs-hero-grade. */
+        .cs-hero {
+            position: relative;
+        }
+
+        .cs-hero-media {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            filter: saturate(1.08) contrast(1.05);
+        }
+
+        .cs-hero-grain {
+            position: absolute;
+            inset: 0;
+            opacity: 0.16;
+            mix-blend-mode: overlay;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        .cs-hero-grade {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            mix-blend-mode: color;
+            background: linear-gradient(135deg, #B23A48 0%, #150F13 45%, #F0B23C 100%);
+            opacity: 0.22;
+        }
+
+        .cs-hero-scrim-b {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, #150F13 0%, #150F13b3 40%, #150F1333 75%, transparent 100%);
+        }
+
+        .cs-hero-scrim-r {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #150F13e6 0%, #150F1380 50%, transparent 100%);
+        }
+
+        /* Cards */
+        .cs-card {
+            background: var(--curtain);
+            border: 1px solid #3A2A38;
+            transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+        }
+
+            .cs-card:hover {
+                transform: translateY(-6px);
+                border-color: var(--gold);
+                box-shadow: 0 18px 40px -18px #000000cc, 0 0 0 1px var(--gold-soft);
+            }
+
+            .cs-card .cs-poster img {
+                transition: transform 0.6s ease, filter 0.6s ease;
+            }
+
+            .cs-card:hover .cs-poster img {
+                transform: scale(1.06);
+                filter: saturate(1.1);
+            }
+
+        /* Lighter, airier panel — use for large content blocks instead of cs-card when you want more "ferah" feel */
+        .cs-panel {
+            background: #2A1D28cc;
+            border: 1px solid #4A3444;
+            backdrop-filter: blur(6px);
+        }
+
+        .cs-score {
+            background: var(--velvet);
+            border: 1px solid var(--gold-soft);
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .cs-type-pill {
+            border-left: 2px dashed #BBA8AF55;
+            padding-left: 8px;
+        }
+
+        .cs-pill {
+            background: var(--curtain);
+            color: var(--mauve);
+            border: 1px solid #3A2A38;
+        }
+
+        .cs-pill-gold {
+            background: var(--gold-soft);
+            color: var(--gold);
+            border: 1px solid var(--gold-soft);
+        }
+
+        .cs-btn-primary {
+            background: var(--gold);
+            color: var(--velvet);
+            transition: filter 0.2s ease, transform 0.2s ease;
+        }
+
+            .cs-btn-primary:hover {
+                filter: brightness(1.08);
+                transform: translateY(-1px);
+            }
+
+        .cs-btn-ghost {
+            border: 1.5px solid var(--wine);
+            color: var(--ivory);
+            background: #C2495614;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+            .cs-btn-ghost:hover {
+                background: #C249562a;
+                transform: translateY(-1px);
+            }
+
+        .cs-progress-track {
+            background: var(--velvet);
+            border: 1px solid #3A2A38;
+        }
+
+        .cs-progress-fill {
+            background: linear-gradient(90deg, #C98F2D, var(--gold));
+        }
+
+        /* Header/nav */
+        .cs-nav-link {
+            color: var(--mauve);
+            transition: color 0.2s ease;
+        }
+
+            .cs-nav-link:hover {
+                color: var(--ivory);
+            }
+
+        .cs-search-input {
+            background: var(--velvet);
+            color: var(--ivory);
+            border: 1px solid #3A2A38;
+            transition: border-color 0.2s ease;
+        }
+
+            .cs-search-input:focus {
+                outline: none;
+                border-color: var(--gold);
+            }
+
+        .cs-social-link {
+            color: var(--mauve);
+            transition: color 0.2s ease;
+        }
+
+            .cs-social-link:hover {
+                color: var(--gold);
+            }
+
+        a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 3px;
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .cs-bulbs span {
+                animation: none;
+            }
+
+            .cs-card, .cs-card .cs-poster img, .cs-btn-primary, .cs-btn-ghost {
+                transition: none;
+            }
+        }
+    </style>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CineSpectra.WebMVC</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+<body class="flex flex-col min-h-screen font-sans antialiased relative">
+    <div class="cs-grain"></div>
+
+    <header class="sticky top-0 z-50 backdrop-blur-md border-b" style="background: #241922e6; border-color: #3A2A38;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="flex items-center gap-2.5 group">
+                        <div class="w-9 h-9 rounded-full flex items-center justify-center border transition-transform group-hover:scale-105"
+                             style="background: var(--velvet); border-color: var(--gold); box-shadow: 0 0 10px 1px var(--gold-soft);">
+                            <i class="fa-solid fa-clapperboard text-sm" style="color: var(--gold);"></i>
+                        </div>
+                        <span class="text-lg font-normal tracking-[0.18em]" style="font-family: 'Bebas Neue', sans-serif; color: var(--ivory);">
+                            CINE<span style="color: var(--gold);">SPECTRA</span>
+                        </span>
+                    </a>
+                </div>
+
+                <div class="hidden md:flex flex-1 max-w-md mx-8">
+                    <div class="relative w-full">
+                        <input type="text" placeholder="Film, dizi veya oyuncu ara..."
+                               class="cs-search-input w-full text-sm pl-10 pr-4 py-2 rounded-full" />
+                        <div class="absolute left-3 top-2.5" style="color: var(--mauve);">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="flex items-center gap-6">
+                    <div class="hidden sm:flex items-center gap-6 text-sm font-medium">
+                        <a href="/Shows/Movies" class="cs-nav-link flex items-center gap-1.5"><i class="fa-solid fa-film text-xs"></i> Filmler</a>
+                        <a href="/Shows/TvShows" class="cs-nav-link flex items-center gap-1.5"><i class="fa-solid fa-tv text-xs"></i> Diziler</a>
+                        <a href="/Ratings/Criteria" class="cs-nav-link flex items-center gap-1.5"><i class="fa-solid fa-star text-xs"></i> Kriterler</a>
+                    </div>
+
+                    <div class="flex items-center gap-3 border-l pl-6" style="border-color: #3A2A38;">
+                        <button class="cs-nav-link text-sm font-medium hidden sm:inline">Giriş Yap</button>
+                        <a href="/auth/register" class="cs-btn-primary text-xs font-semibold px-4 py-2 rounded-full">Üye Ol</a>
+                    </div>
+                </nav>
+
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow relative z-10">
+        @RenderBody()
+    </main>
+
+    <div class="cs-sprocket !mt-4"></div>
+
+    <footer class="border-t mt-auto py-8" style="background: var(--velvet); border-color: #241922;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <span class="text-sm font-normal tracking-[0.18em]" style="font-family: 'Bebas Neue', sans-serif; color: var(--mauve);">
+                        CINE<span style="color: var(--gold);">SPECTRA</span>
+                    </span>
+                    <p class="text-xs mt-1" style="color: var(--mauve); opacity: 0.7;">&copy; @DateTime.Now.Year CineSpectra AI. Tüm hakları saklıdır.</p>
+                </div>
+                <div class="flex gap-6 text-sm">
+                    <a href="#" class="cs-social-link"><i class="fa-brands fa-github text-lg"></i></a>
+                    <a href="#" class="cs-social-link"><i class="fa-brands fa-twitter text-lg"></i></a>
+                    <a href="#" class="cs-social-link"><i class="fa-brands fa-discord text-lg"></i></a>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - CineSpectra.WebMVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
