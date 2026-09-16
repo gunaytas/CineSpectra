@@ -32,14 +32,14 @@ public class CineSpectraDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Show>(entity => {
+        modelBuilder.Entity<Show>((Action<Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Show>>)(entity => {
             entity.ToTable("Shows");
             entity.HasKey(s => s.Id);
             entity.Property(s => s.Title).HasMaxLength(255).IsRequired();
-            entity.Property(s => s.CoverImageUrl).HasMaxLength(500);
+            entity.Property((System.Linq.Expressions.Expression<Func<Show, string?>>)(s => s.CoverImageUrl)).HasMaxLength(500);
             entity.Property(s => s.Type).IsRequired();
-            entity.Property(s => s.AverageScore).HasDefaultValue(0.0);
-        });
+            entity.Property((System.Linq.Expressions.Expression<Func<Show, double>>)(s => s.CriteriaAverageScore)).HasDefaultValue(0.0);
+        }));
 
         modelBuilder.Entity<Season>(entity => {
             entity.ToTable("Seasons");

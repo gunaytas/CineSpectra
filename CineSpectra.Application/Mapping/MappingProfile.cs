@@ -15,7 +15,27 @@ namespace CineSpectra.Application.Mapping
             CreateMap<Season, SeasonDto>();
             CreateMap<Episode, EpisodeDto>();
 
-            CreateMap<Show, ShowDetailDto>();
+            CreateMap<Actor, ActorDto>();
+
+            CreateMap<Character, CharacterDto>()
+                .ForMember(dest => dest.ActorId, opt => opt.MapFrom(src => src.ActorId))
+                .ForMember(dest => dest.ActorName, opt => opt.MapFrom(src => src.Actor != null ? src.Actor.Name : string.Empty));
+
+            CreateMap<Show, ShowDetailDto>()
+            .ForMember(dest => dest.AverageScore, opt => opt.MapFrom(src => src.CriteriaAverageScore))
+
+            .ForMember(dest => dest.Actors, opt => opt.MapFrom(src =>
+                src.Characters != null
+                    ? src.Characters
+                        .Where(c => c.Actor != null)
+                        .Select(c => c.Actor!)
+                        .GroupBy(a => a.Id) 
+                        .Select(g => g.First())
+                        .ToList()
+                    : new List<Actor>()))
+
+            .ForMember(dest => dest.Characters, opt => opt.MapFrom(src => src.Characters));
+
         }
     }
 }

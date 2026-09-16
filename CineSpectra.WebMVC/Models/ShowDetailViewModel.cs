@@ -8,24 +8,25 @@ public class ShowDetailViewModel
 {
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
-    public string Overview { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public string? Director { get; set; } 
     public string? ProductionCompany { get; set; } 
     public string? Writers { get; set; } 
     public DateTime? ReleaseDate { get; set; }
     public string? CoverImageUrl { get; set; }
     public double AverageScore { get; set; }
+    public double? EpisodeAudienceScore { get; set; }
     public MediaType Type { get; set; }
     public int? SeasonCount { get; set; }
     public int? EpisodesCount { get; set; }
 
     public ShowRatingStatsDto RatingStats { get; set; } = new();
-    public List<GenreDto> Genres { get; set; } = new();
-    public List<CharacterDto> Characters { get; set; } = new();
-    public List<ActorDto> Actors { get; set; } = new();
-    public List<SeasonsDto> Seasons { get; set; } = new();
+    public List<CineSpectra.Application.DTOs.GenreDto> Genres { get; set; } = new();
+    public List<CineSpectra.Application.DTOs.CharacterDto> Characters { get; set; } = new();
+    public List<CineSpectra.Application.DTOs.ActorDto> Actors { get; set; } = new();
+    public List<CineSpectra.Application.DTOs.SeasonDto> Seasons { get; set; } = new();
     public List<EpisodesDto> Episodes { get; set; } = new();
-    public List<RatingCriteriaDto> ActiveCriteria { get; set; } = new();
+    public List<CineSpectra.Application.DTOs.RatingCriteriaDto> ActiveCriteria { get; set; } = new();
 }
 
 
@@ -46,8 +47,9 @@ public class CharacterDto
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    public int? ActorId { get; set; }
     public string ActorName { get; set; } = string.Empty;
-    public string? ActorProfilePath { get; set; }
+    public string? ImageUrl { get; set; }
     public double AverageScore { get; set; }
 }
 

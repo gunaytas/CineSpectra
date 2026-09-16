@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CineSpectra.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,8 @@ namespace CineSpectra.Application.Interfaces
         IShowRatingRepository MediaRatings { get; }
         IRatingCriteriaRepository RatingCriterias { get; }
         IShowRepository Shows { get; }
+        IGenericRepository<Season> Seasons { get; }
+        IGenericRepository<Episode> Episodes { get; }
         Task<int> SaveChangesAsync();
     }
 }

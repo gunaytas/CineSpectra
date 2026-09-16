@@ -22,7 +22,7 @@
                 <div class="max-w-2xl">
                     <div class="flex items-center mb-4">
                         <span class="cs-bulbs"><span></span><span></span><span></span><span></span></span>
-                        <span class="cs-eyebrow uppercase">Şimdi Gösterimde</span>
+                        
                     </div>
                     <h1 class="cs-headline text-4xl sm:text-6xl font-extrabold italic tracking-tight mb-4 leading-[1.05]">
                         @Model.HeroShow.Title
@@ -34,7 +34,7 @@
                         <a href="/Shows/@Model.HeroShow.Id" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
                             <i class="fa-solid fa-circle-info"></i> Detayları Gör
                         </a>
-                        <a href="/Shows/@Model.HeroShow.Id#rate" class="cs-btn-ghost text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                        <a href="/Shows/@Model.HeroShow.Id/rate" class="cs-btn-ghost text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
                             <i class="fa-solid fa-star" style="color: var(--gold);"></i> Şimdi Puanla
                         </a>
                     </div>
@@ -60,7 +60,7 @@
     <section class="relative">
         @await Html.PartialAsync("_SectionHeader", new
         {
-            Eyebrow = "Topluluk Favorileri",
+            Eyebrow = (string)null,
                 Headline = "Öne Çıkan Yapımlar",
                 Subtitle = "CineSpectra topluluğunun en yüksek puan verdiği yapımlar"
                 })
@@ -78,7 +78,7 @@
     <section>
         @await Html.PartialAsync("_SectionHeader", new
         {
-            Eyebrow = "Yeni Vizyonda",
+            Eyebrow = (string)null,
                 Headline = "Yeni Eklenenler",
                 Subtitle = "Sisteme yeni eklenen ve vizyona giren güncel yapımlar"
                 })
@@ -98,7 +98,7 @@
         <section>
             @await Html.PartialAsync("_SectionHeader", new
             {
-                Eyebrow = "Keşfet",
+                Eyebrow = (string)null,
                 Headline = $"{group.GenreName} Yapımları",
                 Subtitle = (string?)null
                 })

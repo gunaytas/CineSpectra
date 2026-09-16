@@ -17,6 +17,7 @@ namespace CineSpectra.Domain.Entities
         public string? Overview { get; set; }
         public DateTime? AirDate { get; set; }
         public double AverageScore { get; set; } = 0.0;
+        public int VoteCount { get; set; } = 0;
 
     }
 }

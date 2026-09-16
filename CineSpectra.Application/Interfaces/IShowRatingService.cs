@@ -13,5 +13,7 @@ namespace CineSpectra.Application.Interfaces
         Task<RatingResultDto> SubmitShowRatingAsync(CreateShowRatingDto dto);
         Task<List<RatingCriteriaDto>> GetAllCriteriaAsync();
         Task<ShowRatingStatsDto> GetShowRatingStatsAsync(int showId);
+        Task<RatingResultDto> SubmitSeasonRatingAsync(int seasonId, int showId, double score, string? userId);
+        Task<RatingResultDto> SubmitEpisodeRatingAsync(int episodeId, int showId, double score, string? userId);
     }
 }

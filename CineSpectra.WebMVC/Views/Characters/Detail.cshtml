@@ -1,0 +1,214 @@
+﻿@model CineSpectra.WebMVC.Models.CharacterDetailViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+@* ==========================================
+   HERO / KARAKTER BAŞLIK ALANI
+   ========================================== *@
+<section class="cs-hero min-h-[500px] w-full overflow-hidden flex items-end">
+    <div class="cs-hero-media"
+         style="background-image: url('@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/default-avatar.jpg" : Model.ImageUrl)');
+                filter: saturate(1.08) contrast(1.05) blur(10px);
+                transform: scale(1.08);">
+    </div>
+    <div class="cs-hero-grade"></div>
+    <div class="cs-hero-grain"></div>
+    <div class="cs-hero-scrim-b"></div>
+    <div class="cs-hero-scrim-r"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full z-10">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 items-end">
+
+            @* Sol Taraf: Karakter Portresi *@
+            <div class="hidden md:block col-span-1">
+                <div class="cs-card relative aspect-[2/3] w-full rounded-2xl overflow-hidden shadow-2xl">
+                    <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/default-avatar.jpg" : Model.ImageUrl)"
+                         alt="@Model.Name"
+                         class="h-full w-full object-cover" />
+                </div>
+            </div>
+
+            @* Sağ Taraf: Karakter ve Oyuncu Bilgileri *@
+            <div class="col-span-1 md:col-span-3 space-y-4">
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="cs-pill-gold text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
+                        Kurgusal Karakter
+                    </span>
+                    @if (Model.Shows != null && Model.Shows.Any())
+                    {
+                        <span class="cs-pill text-xs font-medium px-3 py-1 rounded-full">
+                            @Model.Shows.Count Yapımda Göründü
+                        </span>
+                    }
+                </div>
+
+                <h1 class="cs-headline text-3xl sm:text-5xl font-extrabold italic tracking-tight leading-[1.05]">
+                    @Model.Name
+                </h1>
+
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm cs-muted">
+                    <div class="flex items-center gap-1.5 font-bold text-base" style="color: var(--gold);">
+                        <i class="fa-solid fa-star"></i>
+                        <span>@Model.AverageScore.ToString("0.0")</span>
+                        <span class="text-xs font-normal cs-muted">/ 10</span>
+                    </div>
+
+                    @if (Model.RatingStats != null)
+                    {
+                        <span class="cs-muted">&bull;</span>
+                        <span class="cs-muted"><strong style="color: var(--ivory);">@Model.RatingStats.TotalVotes</strong> Değerlendirme</span>
+                    }
+                </div>
+
+                @* Karakter Açıklaması *@
+                
+
+                @* Canlandıran Aktör Rozeti *@
+                @if (Model.ActorId.HasValue && !string.IsNullOrEmpty(Model.ActorName))
+                {
+                    <div class="pt-3 border-t" style="border-color: #3A2A38;">
+                        <span class="cs-eyebrow block mb-2">Canlandıran Oyuncu</span>
+                        <a href="/Actors/@Model.ActorId"
+                           class="inline-flex items-center gap-3 p-2 pr-4 rounded-xl transition-all duration-300 hover:border-[#F0B23C66]"
+                           style="background: var(--curtain); border: 1px solid #3A2A38;">
+                            <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/default-avatar.jpg" : Model.ImageUrl)"
+                                 alt="@Model.ActorName"
+                                 class="w-10 h-10 rounded-lg object-cover" />
+                            <div>
+                                <h4 class="text-sm font-bold leading-tight" style="color: var(--ivory);">@Model.ActorName</h4>
+                                <span class="text-[11px] cs-muted flex items-center gap-1 mt-0.5">
+                                    <i class="fa-solid fa-arrow-right text-[9px]" style="color: var(--gold);"></i> Oyuncu Profiline Git
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                }
+
+                @* Puanla Butonu *@
+                <div class="flex items-center gap-4 pt-4" id="rate">
+                    <a href="#rating-breakdown" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                        <i class="fa-solid fa-star"></i> Karakteri Puanla
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==========================================
+   İÇERİK BÖLÜMÜ
+   ========================================== *@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+
+    
+
+    <div class="cs-sprocket !my-14"></div>
+    @* ==========================================
+       DETAYLI KARAKTER PUAN KARNESİ
+       ========================================== *@
+    <section id="rating-breakdown" class="cs-panel rounded-3xl p-6 sm:p-8 relative">
+        @await Html.PartialAsync("_SectionHeader", new
+        {
+            Eyebrow = (string?)null,
+                Headline = "Karakter Değerlendirme Karnesi",
+                Subtitle = "Karakter derinliği, senaryo uyumu, gelişim arkı gibi topluluk kriter puanları"
+                })
+
+        @if (Model.RatingStats?.CriteriaAverages != null && Model.RatingStats.CriteriaAverages.Any())
+        {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach (var criteria in Model.RatingStats.CriteriaAverages)
+                {
+                    <div class="rounded-2xl p-4 space-y-2" style="background: var(--velvet); border: 1px solid #3A2A38;">
+                        <div class="flex justify-between items-center text-sm font-bold">
+                            <span style="color: var(--ivory);">@criteria.CriteriaName</span>
+                            <span class="flex items-center gap-1" style="color: var(--gold);">
+                                <i class="fa-solid fa-star text-xs"></i> @criteria.AverageScore.ToString("0.0")
+                            </span>
+                        </div>
+
+                        <div class="cs-progress-track w-full h-2.5 rounded-full overflow-hidden">
+                            <div class="cs-progress-fill h-full rounded-full transition-all duration-500"
+                                 style="width: @((criteria.AverageScore * 10).ToString("0", System.Globalization.CultureInfo.InvariantCulture))%;">
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8 text-sm cs-muted">
+                <i class="fa-solid fa-chart-simple text-2xl mb-2 block" style="color: var(--curtain-light);"></i>
+                Bu karakter için henüz detaylı oylama yapılmamış. İlk puanı siz verin!
+            </div>
+        }
+    </section>
+
+    <div class="cs-sprocket !my-14"></div>
+
+    @* ==========================================
+       GÖRÜNDÜĞÜ YAPIMLAR LİSTESİ
+       ========================================== *@
+    <section>
+        @await Html.PartialAsync("_SectionHeader", new
+        {
+            Eyebrow = "Göründüğü Yapımlar",
+                Headline = "Yer Aldığı Film & Diziler",
+                Subtitle = "Karakterin rol aldığı tüm sinematik yapımlar"
+                })
+
+        @if (Model.Shows != null && Model.Shows.Any())
+        {
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                @foreach (var show in Model.Shows)
+                {
+                    <div class="cs-card group rounded-2xl overflow-hidden p-3 space-y-2.5">
+                        <div class="relative aspect-[3/4] w-full rounded-xl overflow-hidden">
+                            <img src="@(string.IsNullOrEmpty(show.ShowPosterUrl) ? "/images/default-poster.jpg" : show.ShowPosterUrl)"
+                                 alt="@show.ShowTitle"
+                                 class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+
+                            @if (show.AverageScore > 0)
+                            {
+                                <div class="cs-score absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 z-10 backdrop-blur-sm">
+                                    <i class="fa-solid fa-star text-[9px]"></i> @show.AverageScore.ToString("0.0")
+                                </div>
+                            }
+
+                            @* Hover Katmanı *@
+                            <div class="absolute inset-0 flex items-center justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
+                                 style="background: #150F13dd; backdrop-filter: blur(2px);">
+                                <a href="/Shows/@show.ShowId"
+                                   class="w-full cs-btn-primary text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 shadow-md">
+                                    <i class="fa-solid fa-film text-[10px]"></i>
+                                    <span>Yapıma Git</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="text-center px-1">
+                            <h3 class="font-bold text-sm line-clamp-1" style="color: var(--ivory);" title="@show.ShowTitle">
+                                @show.ShowTitle
+                            </h3>
+                            @if (show.ShowYear.HasValue)
+                            {
+                                <span class="text-[10px] cs-muted block mt-0.5">@show.ShowYear</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8 text-sm cs-muted cs-panel rounded-2xl">
+                Karakterin ilişkilendirildiği yapım kaydı bulunamadı.
+            </div>
+        }
+    </section>
+
+</div>

@@ -13,7 +13,7 @@ builder.Services.AddDbContext<CineSpectraDbContext>(options =>
 
 builder.Services.AddScoped<IShowRepository, ShowRepository>();
 builder.Services.AddScoped<IShowRatingRepository, MediaRatingRepository>();
-builder.Services.AddScoped<IShowRatingService, ShowRatingService>();
+builder.Services.AddScoped<IShowRatingService, ShowRatingServices>();
 builder.Services.AddScoped<IRatingCriteriaRepository, RatingCriteriaRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IShowService, ShowService>();

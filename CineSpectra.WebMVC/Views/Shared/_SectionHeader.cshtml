@@ -8,7 +8,10 @@
     })
 *@
 <div class="mb-8 relative">
-    <p class="cs-eyebrow uppercase mb-2">@Model.Eyebrow</p>
+    @if (Model.Eyebrow != null)
+    {
+        <p class="cs-eyebrow uppercase mb-2">@Model.Eyebrow</p>
+    }
     <h2 class="cs-headline text-3xl font-bold italic">@Model.Headline</h2>
     @if (Model.Subtitle != null)
     {

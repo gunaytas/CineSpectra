@@ -101,7 +101,7 @@ namespace CineSpectra.Infrastructure.Seeders
                             EpisodesCount = tmdbShow.NumberOfEpisodes,
                             Director = directorName,
                             ProductionCompany = companyName,
-                            AverageScore = 0.0,
+                            CriteriaAverageScore = 0.0,
                             Genres = showGenres,
                             Writers = finalWriters,
                             ReleaseDate = tmdbShow.FirstAirDate ?? new DateTime(2026, 1, 1)

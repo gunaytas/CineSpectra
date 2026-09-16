@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CineSpectra.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,11 +28,37 @@ namespace CineSpectra.Application.DTOs
         public string? ProductionCompany { get; set; }
         public string? Writers { get; set; } 
         public double AverageScore { get; set; }
-        public int Type { get; set; }
+        public double? EpisodeAudienceScore { get; set; }
+        public MediaType Type { get; set; }
         public DateTime? ReleaseDate { get; set; }
 
         public List<GenreDto> Genres { get; set; } = new();
         public List<SeasonDto> Seasons { get; set; } = new();
+        public List<ActorDto> Actors { get; set; } = new();
+        public List<CharacterDto> Characters { get; set; } = new();
+
+        public ShowRatingStatsDto? RatingStats { get; set; }
+    }
+
+    public class CharacterDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int? ActorId { get; set; }
+        public string ActorName { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
+        public double AverageScore { get; set; }
+               
+    }
+
+    public class ActorDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Biography { get; set; }
+        public DateTime? BirthDate { get; set; }
+        public string? ProfileImageUrl { get; set; }
+        public double AverageScore { get; set; }
     }
 
     public class GenreDto
@@ -57,5 +84,7 @@ namespace CineSpectra.Application.DTOs
         public int EpisodeNumber { get; set; }
         public string Title { get; set; } = string.Empty;
         public double AverageScore { get; set; }
+        public string? Overview { get; set; }
+        public DateTime? AirDate { get; set; }
     }
 }

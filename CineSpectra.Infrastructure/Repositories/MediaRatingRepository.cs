@@ -24,5 +24,40 @@ namespace CineSpectra.Infrastructure.Repositories
                 .Where(r => r.ShowId == showId)
                 .ToListAsync();
         }
+        public async Task<MediaRating?> GetUserShowRatingAsync(int showId, string? userId)
+        {
+            return await _context.MediaRatings
+                .Include(r => r.SubValues)
+                .FirstOrDefaultAsync(r => r.ShowId == showId &&
+                                          r.SeasonId == null &&
+                                          r.EpisodeId == null &&
+                                          r.UserId == userId);
+        }
+
+        // Kural 1: Kullanıcı bu sezonun herhangi bir bölümüne oy vermiş mi?
+        public async Task<bool> HasUserRatedAnyEpisodeInSeasonAsync(int seasonId, string userId)
+        {
+            return await _context.MediaRatings
+                .AnyAsync(r => r.SeasonId == seasonId && r.EpisodeId != null && r.UserId == userId);
+        }
+
+        // Kural 2: Kullanıcı sezonun geneline oy vermiş mi?
+        public async Task<bool> HasUserRatedSeasonAsync(int seasonId, string userId)
+        {
+            return await _context.MediaRatings
+                .AnyAsync(r => r.SeasonId == seasonId && r.EpisodeId == null && r.UserId == userId);
+        }
+
+        public async Task<MediaRating?> GetUserSeasonRatingAsync(int seasonId, string? userId)
+        {
+            return await _context.MediaRatings
+                .FirstOrDefaultAsync(r => r.SeasonId == seasonId && r.EpisodeId == null && r.UserId == userId);
+        }
+
+        public async Task<MediaRating?> GetUserEpisodeRatingAsync(int episodeId, string? userId)
+        {
+            return await _context.MediaRatings
+                .FirstOrDefaultAsync(r => r.EpisodeId == episodeId && r.UserId == userId);
+        }
     }
 }

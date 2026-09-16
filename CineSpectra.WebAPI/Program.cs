@@ -22,6 +22,7 @@ builder.Services.AddScoped<DataSeeder>();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 
+
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();

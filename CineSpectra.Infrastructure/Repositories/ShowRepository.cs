@@ -1,4 +1,5 @@
-﻿using CineSpectra.Application.Interfaces;
+﻿using CineSpectra.Application.DTOs;
+using CineSpectra.Application.Interfaces;
 using CineSpectra.Domain.Entities;
 using CineSpectra.Domain.Enums;
 using CineSpectra.Infrastructure.Persistence;
@@ -20,7 +21,7 @@ namespace CineSpectra.Infrastructure.Repositories
         {
             return await _context.Shows
                 .Include(s => s.Genres) 
-                .OrderByDescending(s => s.AverageScore)
+                .OrderByDescending(s => s.CriteriaAverageScore)
                 .Take(count)
                 .ToListAsync();
         }
@@ -66,7 +67,12 @@ namespace CineSpectra.Infrastructure.Repositories
                 .Include(s => s.Genres)
                 .Include(s => s.Seasons)
                     .ThenInclude(se => se.Episodes)
+                .Include(s => s.Actors) 
+                .Include(s => s.Characters)
+                    .ThenInclude(c => c.Actor)
                 .FirstOrDefaultAsync(s => s.Id == id);
+
         }
+
     }
 }

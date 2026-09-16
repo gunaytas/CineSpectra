@@ -4,9 +4,6 @@
     ViewData["Title"] = Model.Title;
 }
 
-@* Bu görünüm _Layout.cshtml'deki ortak tasarım sistemini kullanır
-   (cs-eyebrow, cs-headline, cs-card, cs-panel, cs-sprocket, cs-pill, vb.)
-   ve bölüm başlıkları için Views/Shared/_SectionHeader.cshtml partial'ını kullanır. *@
 
 <section class="cs-hero min-h-[520px] w-full overflow-hidden flex items-end">
     <div class="cs-hero-media" style="background-image: url('@(string.IsNullOrEmpty(Model.CoverImageUrl) ? "/images/default-hero.jpg" : Model.CoverImageUrl)'); filter: saturate(1.08) contrast(1.05) blur(6px); transform: scale(1.04);"></div>
@@ -48,11 +45,47 @@
                 </h1>
 
                 <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm cs-muted">
-                    <div class="flex items-center gap-1.5 font-bold text-base" style="color: var(--gold);">
-                        <i class="fa-solid fa-star"></i>
-                        <span>@Model.AverageScore.ToString("0.0")</span>
-                        <span class="text-xs font-normal cs-muted">/ 10</span>
-                    </div>
+                    @if (Model.Type == MediaType.Movie)
+                    {
+                        @* FİLM: Sadece Kriter Ağırlıklı Puan *@
+                        <div class="flex items-center gap-2">
+                            <span class="cs-eyebrow text-xs">CINESPECTRA PUANI</span>
+                            <div class="flex items-center gap-1 font-bold text-lg" style="color: var(--gold);">
+                                <i class="fa-solid fa-star"></i>
+                                <span>@Model.AverageScore.ToString("0.0")</span>
+                                <span class="text-xs font-normal cs-muted">/ 10</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        @* DİZİ: İki Puan Ayrı Rozetlerde *@
+                        <div class="flex items-center gap-4 p-2.5 rounded-2xl" style="background: #1f141d; border: 1px solid #3A2A38;">
+                            @* 1. Kriter Puanı *@
+                            <div class="flex items-center gap-2 border-r pr-4" style="border-color: #3A2A38;">
+                                <div>
+                                    <span class="text-[10px] cs-eyebrow block leading-tight">KRİTER PUANI</span>
+                                    <span class="text-[11px] cs-muted">Teknik & Anlatı</span>
+                                </div>
+                                <div class="flex items-center gap-1 font-bold text-base" style="color: var(--gold);">
+                                    <i class="fa-solid fa-sliders text-xs"></i>
+                                    <span>@Model.AverageScore.ToString("0.0")</span>
+                                </div>
+                            </div>
+
+                            @* 2. Bölüm Karnesi Puanı *@
+                            <div class="flex items-center gap-2">
+                                <div>
+                                    <span class="text-[10px] cs-eyebrow block leading-tight" style="color: var(--haze);">BÖLÜM ORTALAMASI</span>
+                                    <span class="text-[11px] cs-muted">Seyirci Oyları</span>
+                                </div>
+                                <div class="flex items-center gap-1 font-bold text-base" style="color: var(--ivory);">
+                                    <i class="fa-solid fa-tv text-xs" style="color: var(--mauve);"></i>
+                                    <span>@(Model.EpisodeAudienceScore.HasValue? Model.EpisodeAudienceScore.Value.ToString("0.0") : "—")</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
                     <span class="cs-muted">&bull;</span>
                     <span>@(Model.ReleaseDate?.Year.ToString() ?? "N/A")</span>
                     @if (Model.RatingStats != null)
@@ -63,7 +96,7 @@
                 </div>
 
                 <p class="text-sm sm:text-base leading-relaxed max-w-3xl" style="color: var(--ivory); opacity: 0.85;">
-                    @Model.Overview
+                    @Model.Description
                 </p>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 text-xs border-t" style="border-color: #3A2A38;">
@@ -91,7 +124,7 @@
                 </div>
 
                 <div class="flex items-center gap-4 pt-4" id="rate">
-                    <a href="#rating-breakdown" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    <a href="/Shows/@Model.Id/Rate" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
                         <i class="fa-solid fa-star"></i> Şimdi Puanla
                     </a>
                 </div>
@@ -106,10 +139,12 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8 relative">
     <div class="cs-glow" style="top: 40px; left: -220px;"></div>
 
+
+
     <section id="rating-breakdown" class="cs-panel rounded-3xl p-6 sm:p-8 relative">
         @await Html.PartialAsync("_SectionHeader", new
         {
-            Eyebrow = "Karne",
+            Eyebrow = (string)null,
                 Headline = "Detaylı Puan Karnesi",
                 Subtitle = "CineSpectra topluluğunun alt kriterlere göre verdiği puan ortalamaları"
                 })
@@ -145,45 +180,96 @@
         }
     </section>
 
-    @*
-    <section>
-        @await Html.PartialAsync("_SectionHeader", new {
-            Eyebrow = "Kadro",
-            Headline = "Oyuncular ve Karakterler",
-            Subtitle = "Yapımda yer alan oyuncu kadrosu"
-        })
+    <div class="cs-sprocket !my-14"></div>
 
-        @if (Model.Cast != null && Model.Cast.Any())
+    <section>
+        @await Html.PartialAsync("_SectionHeader", new
+        {
+            Eyebrow = "Kadro",
+                Headline = "Karakterler & Oyuncular",
+                Subtitle = "Yapımda yer alan karakterler ve hayat veren oyuncular"
+                })
+
+        @if (Model.Characters != null && Model.Characters.Any())
         {
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                @foreach (var actor in Model.Cast)
+                @{
+                    int charIdx = 0;
+                }
+                @foreach (var character in Model.Characters)
                 {
-                    <div class="cs-card group rounded-2xl overflow-hidden text-center p-3 space-y-3">
-                        <div class="relative aspect-square w-24 h-24 mx-auto rounded-full overflow-hidden border-2 transition-colors" style="border-color: #3A2A38;">
-                            <img src="@(string.IsNullOrEmpty(actor.ActorImageUrl) ? "/images/default-avatar.jpg" : actor.ActorImageUrl)"
-                                 alt="@actor.ActorName"
-                                 class="h-full w-full object-cover" />
+                    charIdx++;
+                    <div class="cs-card group rounded-2xl overflow-hidden p-3 space-y-2.5 @(charIdx > 6 ? "hidden cast-characters-extra" : "")">
+
+                        @* Görsel ve Hover Katmanı *@
+                        <div class="relative aspect-[3/4] w-full rounded-xl overflow-hidden">
+                            <img src="@(string.IsNullOrEmpty(character.ImageUrl) ? "/images/default-avatar.jpg" : character.ImageUrl)"
+                                 alt="@character.Name" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+
+                            @if (character.AverageScore > 0)
+                            {
+                                <div class="cs-score absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 z-10 backdrop-blur-sm">
+                                    <i class="fa-solid fa-star text-[9px]"></i> @character.AverageScore.ToString("0.0")
+                                </div>
+                            }
+
+                            @* Hover Overlay: Karakter ve Oyuncu Detay Butonları *@
+                            <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
+                                 style="background: #150F13dd; backdrop-filter: blur(2px);">
+
+                                @* Karakter Detayı Butonu *@
+                                <a href="/Characters/@character.Id"
+                                   class="w-full cs-btn-primary text-xs font-bold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 shadow-md">
+                                    <i class="fa-solid fa-mask text-[10px]"></i>
+                                    <span>Karakter</span>
+                                </a>
+
+                                @* Oyuncu Detayı Butonu *@
+                                @if (character.ActorId.HasValue && character.ActorId.Value > 0)
+                                {
+                                    <a href="/actors/@character.ActorId"
+                                       class="w-full cs-btn-ghost text-xs font-semibold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-user text-[10px]"></i>
+                                        <span>Oyuncu</span>
+                                    </a>
+                                }
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="font-bold text-sm line-clamp-1 transition-colors" style="color: var(--ivory);">
-                                @actor.ActorName
+
+                        @* Bilgi Alanı *@
+                        <div class="text-center px-1">
+                            <h3 class="font-bold text-sm line-clamp-1" style="color: var(--ivory);" title="@character.Name">
+                                @character.Name
                             </h3>
-                            <p class="text-xs mt-0.5 line-clamp-1 cs-muted">
-                                @actor.CharacterName
-                            </p>
+                            @if (!string.IsNullOrEmpty(character.ActorName))
+                            {
+                                <p class="text-[11px] mt-0.5 line-clamp-1 cs-muted" title="@character.ActorName">
+                                    @character.ActorName
+                                </p>
+                            }
                         </div>
+
                     </div>
                 }
             </div>
+
+            @if (Model.Characters.Count() > 6)
+            {
+                <div class="text-center mt-6">
+                    <button type="button" class="cs-btn-ghost text-sm font-bold px-6 py-2.5 rounded-xl inline-flex items-center gap-2"
+                            onclick="document.querySelectorAll('.cast-characters-extra').forEach(el => el.classList.toggle('hidden')); this.dataset.open = this.dataset.open === '1' ? '0' : '1'; this.textContent = this.dataset.open === '1' ? 'Daha Az Göster' : 'Daha Fazla Göster';">
+                        Daha Fazla Göster
+                    </button>
+                </div>
+            }
         }
         else
         {
             <div class="text-center py-8 text-sm cs-muted cs-panel rounded-2xl">
-                Oyuncu bilgisi bulunamadı.
+                Kadro bilgisi bulunamadı.
             </div>
         }
     </section>
-    *@
 
     @if (Model.Type == MediaType.TVShow && Model.Seasons != null && Model.Seasons.Any())
     {
@@ -194,47 +280,134 @@
             {
                 Eyebrow = "Bölümler",
                 Headline = "Sezonlar ve Bölümler",
-                Subtitle = "Dizinin yayınlanan tüm sezonları ve bölümleri"
+                Subtitle = "Dizinin yayınlanan tüm sezonları ve bölümleri — sezon ve bölümleri ayrı ayrı puanlayın"
                 })
 
         <div class="space-y-4">
             @foreach (var season in Model.Seasons)
                 {
                     <details class="cs-card group rounded-2xl overflow-hidden [&_summary::-webkit-details-marker]:hidden">
+
+                        @* Sezon Başlık Satırı *@
                         <summary class="flex items-center justify-between p-5 cursor-pointer select-none">
-                            <span class="font-bold text-base flex items-center gap-3" style="color: var(--ivory);">
-                                <span class="cs-pill-gold px-3 py-1 rounded-lg text-xs font-semibold">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="cs-pill-gold px-3 py-1 rounded-lg text-xs font-semibold flex-shrink-0">
                                     Sezon @season.SeasonNumber
                                 </span>
-                                @(string.IsNullOrEmpty(season.Name) ? $"{season.SeasonNumber}. Sezon" : season.Name)
-                            </span>
-                            <span class="text-xs flex items-center gap-2 cs-muted">
-                                @(season.Episodes?.Count ?? 0) Bölüm
-                                <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:-rotate-180"></i>
-                            </span>
-                        </summary>
-
-                        @if (season.Episodes != null && season.Episodes.Any())
-                        {
-                            <div class="px-5 pb-5 pt-2 border-t space-y-2" style="border-color: #3A2A38;">
-                                @foreach (var episode in season.Episodes.OrderBy(e => e.EpisodeNumber))
+                                <span class="font-bold text-base truncate" style="color: var(--ivory);">
+                                    @(string.IsNullOrEmpty(season.Name) ? $"{season.SeasonNumber}. Sezon" : season.Name)
+                                </span>
+                                @if (season.AverageScore > 0)
                                 {
-                                    <div class="flex items-center justify-between p-3 rounded-xl" style="background: var(--velvet); border: 1px solid #3A2A38;">
-                                        <div class="flex items-center gap-3">
-                                            <span class="text-xs font-mono w-8 cs-muted">
-                                                E@(episode.EpisodeNumber.ToString("D2"))
-                                            </span>
-                                            <span class="text-sm font-medium" style="color: var(--ivory);">
-                                                @episode.Title
-                                            </span>
-                                        </div>
-                                        <div class="text-xs font-bold flex items-center gap-1" style="color: var(--gold);">
-                                            <i class="fa-solid fa-star text-[10px]"></i> @episode.AverageScore.ToString("0.0")
-                                        </div>
-                                    </div>
+                                    <span class="text-xs font-bold flex items-center gap-1 flex-shrink-0" style="color: var(--gold);">
+                                        <i class="fa-solid fa-star text-[10px]"></i> @season.AverageScore.ToString("0.0")
+                                    </span>
                                 }
                             </div>
-                        }
+
+                            <div class="flex items-center gap-4 flex-shrink-0">
+                                @* Sezon Oylama Butonu (summary açılmasını tetiklememesi için onclick stopPropagation eklendi) *@
+                                <a href="/Seasons/@season.Id/Rate"
+                                   onclick="event.stopPropagation();"
+                                   class="cs-btn-ghost text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-transform hover:scale-105">
+                                    <i class="fa-solid fa-star text-[10px]" style="color: var(--gold);"></i>
+                                    <span class="hidden sm:inline">Sezonu Puanla</span>
+                                    <span class="sm:hidden">Puanla</span>
+                                </a>
+
+                                <span class="text-xs flex items-center gap-2 cs-muted">
+                                    @(season.Episodes?.Count ?? 0) Bölüm
+                                    <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:-rotate-180"></i>
+                                </span>
+                            </div>
+                        </summary>
+
+                        <div class="border-t" style="border-color: #3A2A38;">
+
+                            @* Sezon Detay Alanı *@
+                            @if (!string.IsNullOrEmpty(season.Overview) || !string.IsNullOrEmpty(season.PosterPath))
+                            {
+                                <div class="px-5 pt-4 pb-2 flex gap-4 items-start">
+                                    @if (!string.IsNullOrEmpty(season.PosterPath))
+                                    {
+                                        <div class="cs-card relative flex-shrink-0 w-24 sm:w-32 aspect-[2/3] rounded-xl overflow-hidden">
+                                            <img src="@season.PosterPath" alt="Sezon @season.SeasonNumber afişi" class="h-full w-full object-cover" />
+                                            @if (season.AverageScore > 0)
+                                            {
+                                                <div class="cs-score absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                    <i class="fa-solid fa-star text-[9px]"></i> @season.AverageScore.ToString("0.0")
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(season.Overview))
+                                    {
+                                        <p class="text-sm leading-relaxed cs-muted">@season.Overview</p>
+                                    }
+                                </div>
+                            }
+
+                            @* Bölümler Listesi *@
+                            @if (season.Episodes != null && season.Episodes.Any())
+                            {
+                                <div class="px-5 pb-5 pt-3 space-y-2.5">
+                                    @foreach (var episode in season.Episodes.OrderBy(e => e.EpisodeNumber))
+                                    {
+                                        <div class="p-3.5 rounded-xl transition-all duration-200 hover:border-[#4A3444]"
+                                             style="background: var(--velvet); border: 1px solid #3A2A38;">
+
+                                            <div class="flex items-center justify-between gap-3">
+
+                                                @* Sol Taraf: Bölüm No ve Başlık *@
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <span class="text-xs font-mono w-8 flex-shrink-0 cs-muted">
+                                                        E@(episode.EpisodeNumber.ToString("D2"))
+                                                    </span>
+                                                    <span class="text-sm font-medium truncate" style="color: var(--ivory);" title="@episode.Title">
+                                                        @episode.Title
+                                                    </span>
+                                                </div>
+
+                                                @* Sağ Taraf: Puan ve Oylama Butonu *@
+                                                <div class="flex items-center gap-3 flex-shrink-0">
+                                                    @if (episode.AverageScore > 0)
+                                                    {
+                                                        <div class="text-xs font-bold flex items-center gap-1" style="color: var(--gold);">
+                                                            <i class="fa-solid fa-star text-[10px]"></i> @episode.AverageScore.ToString("0.0")
+                                                        </div>
+                                                    }
+
+                                                    <a href="/Episodes/@episode.Id/Rate"
+                                                       class="cs-btn-primary text-[11px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                                                        <i class="fa-solid fa-star text-[9px]"></i> Puanla
+                                                    </a>
+                                                </div>
+
+                                            </div>
+
+                                            @if (episode.AirDate != null || !string.IsNullOrEmpty(episode.Overview))
+                                            {
+                                                <div class="mt-2 pl-11 space-y-1">
+                                                    @if (episode.AirDate != null)
+                                                    {
+                                                        <p class="text-[11px] flex items-center gap-1.5 cs-muted">
+                                                            <i class="fa-regular fa-calendar text-[10px]"></i>
+                                                            @(((DateTime)episode.AirDate).ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR")))
+                                                        </p>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(episode.Overview))
+                                                    {
+                                                        <p class="text-xs leading-relaxed line-clamp-2 cs-muted">@episode.Overview</p>
+                                                    }
+                                                </div>
+                                            }
+
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                        </div>
                     </details>
                 }
             </div>

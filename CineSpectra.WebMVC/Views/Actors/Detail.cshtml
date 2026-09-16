@@ -1,0 +1,261 @@
+﻿@model CineSpectra.WebMVC.Models.ActorDetailViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+@* ==========================================
+   HERO / OYUNCU BAŞLIK ALANI (Show Hero ile aynı hizada ve dokuda)
+   ========================================== *@
+<section class="cs-hero min-h-[500px] w-full overflow-hidden flex items-end">
+    @* Arka plan atmosferi: Oyuncu fotoğrafı filtresi, gren ve film renk derecelendirmesi *@
+    <div class="cs-hero-media"
+         style="background-image: url('@(string.IsNullOrEmpty(Model.ProfileImageUrl) ? "/images/default-avatar.jpg" : Model.ProfileImageUrl)');
+                filter: saturate(1.08) contrast(1.05) blur(10px);
+                transform: scale(1.08);">
+    </div>
+    <div class="cs-hero-grade"></div>
+    <div class="cs-hero-grain"></div>
+    <div class="cs-hero-scrim-b"></div>
+    <div class="cs-hero-scrim-r"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full z-10">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 items-end">
+
+            @* Sol Taraf: Oyuncu Portresi *@
+            <div class="hidden md:block col-span-1">
+                <div class="cs-card relative aspect-[2/3] w-full rounded-2xl overflow-hidden shadow-2xl">
+                    <img src="@(string.IsNullOrEmpty(Model.ProfileImageUrl) ? "/images/default-avatar.jpg" : Model.ProfileImageUrl)"
+                         alt="@Model.Name"
+                         class="h-full w-full object-cover" />
+                </div>
+            </div>
+
+            @* Sağ Taraf: İsim, Künye ve Hızlı Bilgiler *@
+            <div class="col-span-1 md:col-span-3 space-y-4">
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="cs-pill-gold text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
+                        Oyuncu
+                    </span>
+                    @if (Model.Filmography != null && Model.Filmography.Any())
+                    {
+                        <span class="cs-pill text-xs font-medium px-3 py-1 rounded-full">
+                            @Model.Filmography.Count Proje
+                        </span>
+                    }
+                </div>
+
+                <h1 class="cs-headline text-3xl sm:text-5xl font-extrabold italic tracking-tight leading-[1.05]">
+                    @Model.Name
+                </h1>
+
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm cs-muted">
+                    <div class="flex items-center gap-1.5 font-bold text-base" style="color: var(--gold);">
+                        <i class="fa-solid fa-star"></i>
+                        <span>@Model.AverageScore.ToString("0.0")</span>
+                        <span class="text-xs font-normal cs-muted">/ 10</span>
+                    </div>
+
+                    @if (Model.BirthDate != null)
+                    {
+                        <span class="cs-muted">&bull;</span>
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-regular fa-cake-candles text-xs"></i>
+                            @(((DateTime)Model.BirthDate).ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR")))
+                            @{
+                                var age = DateTime.Today.Year - Model.BirthDate.Value.Year;
+                                if (Model.BirthDate.Value.Date > DateTime.Today.AddYears(-age)) age--;
+                            }
+                            <span class="text-xs cs-muted">(@age yaşında)</span>
+                        </span>
+                    }
+
+                    @if (Model.RatingStats != null)
+                    {
+                        <span class="cs-muted">&bull;</span>
+                        <span class="cs-muted"><strong style="color: var(--ivory);">@Model.RatingStats.TotalVotes</strong> Değerlendirme</span>
+                    }
+                </div>
+
+                @* Biyografi Kısa Özeti *@
+                @if (!string.IsNullOrEmpty(Model.Biography))
+                {
+                    <p class="text-sm sm:text-base leading-relaxed max-w-3xl line-clamp-3" style="color: var(--ivory); opacity: 0.85;">
+                        @Model.Biography
+                    </p>
+                }
+
+                @* Künye Alt Çizgisi *@
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 text-xs border-t" style="border-color: #3A2A38;">
+
+                    <div>
+                        <span class="cs-eyebrow block mb-1">Kariyer Başlangıcı</span>
+                        <span class="font-medium text-sm" style="color: var(--ivory);">
+                            @(Model.Filmography?.OrderBy(f => f.ShowYear).FirstOrDefault()?.ShowYear.ToString() ?? "—")
+                        </span>
+                    </div>
+                </div>
+
+                @* Puanla Butonu *@
+                <div class="flex items-center gap-4 pt-4" id="rate">
+                    <a href="#rating-breakdown" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                        <i class="fa-solid fa-star"></i> Oyuncuyu Puanla
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==========================================
+   İÇERİK BÖLÜMÜ
+   ========================================== *@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+
+    <div class="cs-sprocket !my-14"></div>
+        
+
+    @* ==========================================
+       DETAYLI PUAN KARNESİ (Birebir Show Detayındaki Yapı)
+       ========================================== *@
+    <section id="rating-breakdown" class="cs-panel rounded-3xl p-6 sm:p-8 relative">
+        @await Html.PartialAsync("_SectionHeader", new
+        {
+            Eyebrow = (string?)null,
+                Headline = "Detaylı Oyunculuk Karnesi",
+                Subtitle = "CineSpectra topluluğunun performans kriterlerine göre verdiği puan ortalamaları"
+                })
+
+        @if (Model.RatingStats != null && Model.RatingStats.CriteriaAverages != null && Model.RatingStats.CriteriaAverages.Any())
+        {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach (var criteria in Model.RatingStats.CriteriaAverages)
+                {
+                    <div class="rounded-2xl p-4 space-y-2" style="background: var(--velvet); border: 1px solid #3A2A38;">
+                        <div class="flex justify-between items-center text-sm font-bold">
+                            <span style="color: var(--ivory);">@criteria.CriteriaName</span>
+                            <span class="flex items-center gap-1" style="color: var(--gold);">
+                                <i class="fa-solid fa-star text-xs"></i> @criteria.AverageScore.ToString("0.0")
+                            </span>
+                        </div>
+
+                        <div class="cs-progress-track w-full h-2.5 rounded-full overflow-hidden">
+                            <div class="cs-progress-fill h-full rounded-full transition-all duration-500"
+                                 style="width: @((criteria.AverageScore * 10).ToString("0", System.Globalization.CultureInfo.InvariantCulture))%;">
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8 text-sm cs-muted">
+                <i class="fa-solid fa-chart-simple text-2xl mb-2 block" style="color: var(--curtain-light);"></i>
+                Henüz detaylı performans oylaması yapılmamış. İlk puanı siz verin!
+            </div>
+        }
+    </section>
+
+    <div class="cs-sprocket !my-14"></div>
+
+    @* ==========================================
+       FİLMOGRAFİ & CANLANDIRILAN KARAKTERLER (Show Detayındaki Kadro Izgarasıyla Birebir)
+       ========================================== *@
+    <section>
+        @await Html.PartialAsync("_SectionHeader", new
+        {
+            Eyebrow = "Filmografi",
+                Headline = "Rol Aldığı Yapımlar & Karakterler",
+                Subtitle = "Oyuncunun hayat verdiği tüm roller ve yer aldığı yapımlar"
+                })
+
+        @if (Model.Filmography != null && Model.Filmography.Any())
+        {
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                @{
+                    int creditIdx = 0;
+                }
+                @foreach (var credit in Model.Filmography)
+                {
+                    creditIdx++;
+                    <div class="cs-card group rounded-2xl overflow-hidden p-3 space-y-2.5 @(creditIdx > 6 ? "hidden filmography-extra" : "")">
+
+                        @* Görsel ve Hover Katmanı *@
+                        <div class="relative aspect-[3/4] w-full rounded-xl overflow-hidden">
+                            <img src="@(string.IsNullOrEmpty(credit.ShowPosterUrl) ? "/images/default-poster.jpg" : credit.ShowPosterUrl)"
+                                 alt="@credit.ShowTitle"
+                                 class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+
+                            @if (credit.AverageScore > 0)
+                            {
+                                <div class="cs-score absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 z-10 backdrop-blur-sm">
+                                    <i class="fa-solid fa-star text-[9px]"></i> @credit.AverageScore.ToString("0.0")
+                                </div>
+                            }
+
+                            @* Hover Katmanı: Yapıma ve Karakter Detayına Giden Butonlar *@
+                            <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
+                                 style="background: #150F13dd; backdrop-filter: blur(2px);">
+
+                                @* Yapım Detayı *@
+                                <a href="/Shows/@credit.ShowId"
+                                   class="w-full cs-btn-primary text-xs font-bold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 shadow-md">
+                                    <i class="fa-solid fa-film text-[10px]"></i>
+                                    <span>Yapım</span>
+                                </a>
+
+                                @* Karakter Detayı *@
+                                @if (credit.CharacterId > 0)
+                                {
+                                    <a href="/Characters/@credit.CharacterId"
+                                       class="w-full cs-btn-ghost text-xs font-semibold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-mask text-[10px]"></i>
+                                        <span>Karakter</span>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+
+                        @* Yapım ve Rol Bilgisi *@
+                        <div class="text-center px-1">
+                            <h3 class="font-bold text-sm line-clamp-1" style="color: var(--ivory);" title="@credit.ShowTitle">
+                                @credit.ShowTitle
+                            </h3>
+                            @if (!string.IsNullOrEmpty(credit.CharacterName))
+                            {
+                                <p class="text-[11px] mt-0.5 line-clamp-1 cs-muted" title="@credit.CharacterName">
+                                    Rol: <span style="color: var(--ivory);">@credit.CharacterName</span>
+                                </p>
+                            }
+                            @if (credit.ShowYear.HasValue)
+                            {
+                                <span class="text-[10px] cs-muted block mt-0.5">@credit.ShowYear</span>
+                            }
+                        </div>
+
+                    </div>
+                }
+            </div>
+
+            @* 6'dan Fazla Yapım Varsa Açılır Kapanır 'Daha Fazla Göster' Butonu *@
+            @if (Model.Filmography.Count > 6)
+            {
+                <div class="text-center mt-6">
+                    <button type="button" class="cs-btn-ghost text-sm font-bold px-6 py-2.5 rounded-xl inline-flex items-center gap-2"
+                            onclick="document.querySelectorAll('.filmography-extra').forEach(el => el.classList.toggle('hidden')); this.dataset.open = this.dataset.open === '1' ? '0' : '1'; this.textContent = this.dataset.open === '1' ? 'Daha Az Göster' : 'Daha Fazla Göster';">
+                        Daha Fazla Göster
+                    </button>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-8 text-sm cs-muted cs-panel rounded-2xl">
+                Oyuncuya ait yapım bilgisi bulunamadı.
+            </div>
+        }
+    </section>
+
+</div>

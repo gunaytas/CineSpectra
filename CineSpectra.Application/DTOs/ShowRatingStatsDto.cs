@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CineSpectra.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,5 +20,6 @@ namespace CineSpectra.Application.DTOs
         public int CriteriaId { get; set; }
         public string CriteriaName { get; set; } = string.Empty;
         public double AverageScore { get; set; } 
+        public CriteriaTarget Target { get; set; }
     }
 }

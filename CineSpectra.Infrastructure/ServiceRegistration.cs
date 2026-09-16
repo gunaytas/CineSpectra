@@ -25,7 +25,13 @@ namespace CineSpectra.Infrastructure
 
             services.AddScoped<IShowRatingRepository, MediaRatingRepository>();
 
-            services.AddScoped<IShowRatingService, ShowRatingService>();
+            services.AddScoped<IShowRatingService, ShowRatingServices>();
+
+            services.AddScoped<IActorService, ActorService>();
+            services.AddScoped<IActorRepository, ActorRepository>();
+
+            services.AddScoped<ICharacterRepository, CharacterRepository>();
+            services.AddScoped<ICharacterService, CharacterService>();
         }
     }
 }

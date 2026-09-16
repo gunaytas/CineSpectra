@@ -16,7 +16,8 @@ namespace CineSpectra.Domain.Entities
         public string? Name { get; set; }
         public string? Overview { get; set; }
         public string? PosterPath { get; set; }
-        public double AverageScore { get; set; } = 0.0; 
+        public double AverageScore { get; set; } = 0.0;
+        public int VoteCount { get; set; } = 0;
 
         public ICollection<Episode> Episodes { get; set; } = new List<Episode>();
     }

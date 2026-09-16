@@ -22,12 +22,17 @@ namespace CineSpectra.Domain.Entities
         public int? SeasonsCount { get; set; } // sadece dizi için geçerli, film için null olabilir
         public int? EpisodesCount { get; set; } // sadece dizi için geçerli, film için null olabilir
 
-        public double AverageScore { get; set; } = 0.0;
+        public double CriteriaAverageScore { get; set; } = 0.0;
+        public int CriteriaVoteCount { get; set; } = 0;
+        public double? EpisodeAudienceScore { get; set; }
+        public int TotalEpisodeVoteCount { get; set; } = 0;
         public DateTime? ReleaseDate { get; set; }
+
 
         public ICollection<Actor> Actors { get; set; } = new List<Actor>(); 
         public ICollection<Character> Characters { get; set; } = new List<Character>();
         public ICollection<Genre> Genres { get; set; } = new List<Genre>();
         public ICollection<Season> Seasons { get; set; } = new List<Season>();
+        public ICollection<MediaRating> Ratings { get; set; } = new List<MediaRating>();
     }
 }

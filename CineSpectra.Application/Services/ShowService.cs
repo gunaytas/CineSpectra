@@ -13,11 +13,13 @@ namespace CineSpectra.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IShowRatingService _ratingService;
 
-        public ShowService(IUnitOfWork unitOfWork, IMapper mapper)
+        public ShowService(IUnitOfWork unitOfWork, IMapper mapper, IShowRatingService ratingService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _ratingService = ratingService;
         }
 
         public async Task<IEnumerable<ShowListDto>> GetPopularShowsAsync(int count)
@@ -54,7 +56,11 @@ namespace CineSpectra.Application.Services
 
             if (show == null) return null;
 
-            return _mapper.Map<ShowDetailDto>(show);
+            var showDto = _mapper.Map<ShowDetailDto>(show);
+
+            showDto.RatingStats = await _ratingService.GetShowRatingStatsAsync(id);
+
+            return showDto;
         }
     }
 }
