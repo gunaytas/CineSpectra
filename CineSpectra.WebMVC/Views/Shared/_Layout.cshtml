@@ -74,12 +74,20 @@
             --haze: #E7D9C4;
         }
 
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             background-color: var(--velvet);
             background-image: radial-gradient(140% 100% at 50% -10%, #2A1D26 0%, var(--velvet) 55%);
-            color: var(--ivory);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
             font-family: 'Inter', sans-serif;
         }
+
 
         .cs-eyebrow {
             font-family: 'Bebas Neue', sans-serif;

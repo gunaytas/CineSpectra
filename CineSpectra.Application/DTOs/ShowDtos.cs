@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 namespace CineSpectra.Application.DTOs
 {
     public class ShowListDto
-    {
+    { 
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? CoverImageUrl { get; set; }
         public double AverageScore { get; set; }
-        public int Type { get; set; } 
+        public MediaType Type { get; set; } 
         public DateTime? ReleaseDate { get; set; }
+        public double? EpisodeAudienceScore { get; set; }
         public List<GenreDto> Genres { get; set; } = new();
     }
 
@@ -38,6 +39,7 @@ namespace CineSpectra.Application.DTOs
         public List<CharacterDto> Characters { get; set; } = new();
 
         public ShowRatingStatsDto? RatingStats { get; set; }
+        public List<ShowCommentDto> Comments { get; set; } = new();
     }
 
     public class CharacterDto
@@ -86,5 +88,15 @@ namespace CineSpectra.Application.DTOs
         public double AverageScore { get; set; }
         public string? Overview { get; set; }
         public DateTime? AirDate { get; set; }
+        public double? UserScore { get; set; }
+    }
+
+    public class ShowCommentDto
+    {
+        public string? UserId { get; set; }
+        public string? UserName { get; set; }
+        public double Score { get; set; }
+        public string? Comment { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

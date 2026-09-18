@@ -1,11 +1,9 @@
-﻿@model CineSpectra.WebMVC.Models.HomeViewModel
+﻿@using CineSpectra.Domain.Enums
+@model CineSpectra.WebMVC.Models.HomeViewModel
+
 @{
     ViewData["Title"] = "Keşfet & Puanla";
 }
-
-@* Bu görünüm _Layout.cshtml'deki ortak tasarım sistemini kullanır.
-   Bölüm başlıkları -> Views/Shared/_SectionHeader.cshtml
-   Poster kartları  -> Views/Shared/_ShowCard.cshtml *@
 
 @if (Model.HeroShow != null)
 {
@@ -34,17 +32,51 @@
                         <a href="/Shows/@Model.HeroShow.Id" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
                             <i class="fa-solid fa-circle-info"></i> Detayları Gör
                         </a>
-                        <a href="/Shows/@Model.HeroShow.Id/rate" class="cs-btn-ghost text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
-                            <i class="fa-solid fa-star" style="color: var(--gold);"></i> Şimdi Puanla
-                        </a>
+                        <div class="flex items-center gap-3 flex-wrap pt-4">
+                            @if (Model.HeroShow.Type == MediaType.TVShow)
+                            {
+                                <a href="/Shows/@Model.HeroShow.Id/Rate" class="cs-btn-primary text-xs font-bold px-5 py-3 rounded-xl flex items-center gap-2">
+                                    <i class="fa-solid fa-sliders"></i> Kriter Puanla
+                                </a>
+                                <a href="/Shows/@Model.HeroShow.Id/RateEpisode" class="cs-btn-ghost text-xs font-bold px-5 py-3 rounded-xl flex items-center gap-2">
+                                    <i class="fa-solid fa-tv" style="color: var(--gold);"></i> Bölüm Puanla
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="/Shows/@Model.HeroShow.Id/Rate" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                                    <i class="fa-solid fa-star"></i> Şimdi Puanla
+                                </a>
+                            }
+                        </div>
                     </div>
                 </div>
 
                 <a href="/Shows/@Model.HeroShow.Id" class="cs-card hidden sm:block flex-shrink-0 relative w-56 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl">
                     <img src="@(string.IsNullOrEmpty(Model.HeroShow.CoverImageUrl) ? "/images/default-poster.jpg" : Model.HeroShow.CoverImageUrl)"
                          alt="@Model.HeroShow.Title" class="h-full w-full object-cover" />
-                    <div class="cs-score absolute top-3 left-3 text-xs px-2.5 py-1 rounded-lg backdrop-blur-sm flex items-center gap-1">
-                        <i class="fa-solid fa-star"></i> @Model.HeroShow.AverageScore.ToString("0.0")
+                    <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+                        @if (Model.HeroShow.Type == MediaType.TVShow)
+                        {
+                            @* Kriter Puanı *@
+                            <div class="cs-score text-[11px] px-2 py-0.5 rounded-md backdrop-blur-md flex items-center gap-1">
+                                <i class="fa-solid fa-sliders text-[10px]"></i>
+                                <span>@Model.HeroShow.AverageScore.ToString("0.0")</span>
+                            </div>
+                            @* Bölüm Puanı *@
+                            <div class="text-[11px] px-2 py-0.5 rounded-md backdrop-blur-md flex items-center gap-1 font-bold"
+                                 style="background: rgba(36, 25, 34, 0.85); border: 1px solid #4A3444; color: var(--ivory);">
+                                <i class="fa-solid fa-tv text-[10px]" style="color: var(--mauve);"></i>
+                                <span>@(Model.HeroShow.EpisodeAudienceScore.HasValue && Model.HeroShow.EpisodeAudienceScore > 0 ? Model.HeroShow.EpisodeAudienceScore.Value.ToString("0.0") : "—")</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="cs-score text-xs px-2.5 py-1 rounded-lg backdrop-blur-md flex items-center gap-1">
+                                <i class="fa-solid fa-star text-[11px]"></i>
+                                <span>@Model.HeroShow.AverageScore.ToString("0.0")</span>
+                            </div>
+                        }
                     </div>
                 </a>
 
@@ -53,63 +85,85 @@
     </section>
     <div class="cs-sprocket"></div>
 }
-
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8 relative">
     <div class="cs-glow" style="top: -120px; right: -200px;"></div>
 
+    @* 1. Öne Çıkan Yapımlar *@
     <section class="relative">
         @await Html.PartialAsync("_SectionHeader", new
         {
-            Eyebrow = (string)null,
+            Eyebrow = default(string),
                 Headline = "Öne Çıkan Yapımlar",
                 Subtitle = "CineSpectra topluluğunun en yüksek puan verdiği yapımlar"
                 })
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            @foreach (var show in Model.PopularShows)
+            @if (Model.PopularShows != null && Model.PopularShows.Any())
             {
-                @await Html.PartialAsync("_ShowCard", show)
+                @foreach (var show in Model.PopularShows.Where(s => s != null))
+                {
+                    @await Html.PartialAsync("_ShowCard", show)
+                }
+            }
+            else
+            {
+                <div class="col-span-full py-8 text-center text-sm cs-muted">
+                    Öne çıkan yapım bulunamadı.
+                </div>
             }
         </div>
     </section>
 
     <div class="cs-sprocket !my-14"></div>
 
+    @* 2. Yeni Eklenenler *@
     <section>
         @await Html.PartialAsync("_SectionHeader", new
         {
-            Eyebrow = (string)null,
+            Eyebrow = default(string),
                 Headline = "Yeni Eklenenler",
                 Subtitle = "Sisteme yeni eklenen ve vizyona giren güncel yapımlar"
                 })
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            @foreach (var show in Model.RecentShows.Take(5))
+            @if (Model.RecentShows != null && Model.RecentShows.Any())
             {
-                @await Html.PartialAsync("_ShowCard", show)
+                @foreach (var show in Model.RecentShows.Where(s => s != null).Take(5))
+                {
+                    @await Html.PartialAsync("_ShowCard", show)
+                }
+            }
+            else
+            {
+                <div class="col-span-full py-8 text-center text-sm cs-muted">
+                    Yeni eklenen yapım bulunamadı.
+                </div>
             }
         </div>
     </section>
 
-    @foreach (var group in Model.GenreGroups)
+    @* 3. Tür Grupları *@
+    @if (Model.GenreGroups != null && Model.GenreGroups.Any())
     {
-        <div class="cs-sprocket !my-14"></div>
+        @foreach (var group in Model.GenreGroups.Where(g => g != null && g.Shows != null && g.Shows.Any()))
+        {
+            <div class="cs-sprocket !my-14"></div>
 
-        <section>
-            @await Html.PartialAsync("_SectionHeader", new
-            {
-                Eyebrow = (string)null,
+            <section>
+                @await Html.PartialAsync("_SectionHeader", new
+                {
+                    Eyebrow = default(string),
                 Headline = $"{group.GenreName} Yapımları",
-                Subtitle = (string?)null
+                Subtitle = default(string)
                 })
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            @foreach (var show in group.Shows)
-                {
-                    @await Html.PartialAsync("_ShowCard", show)
-                }
-            </div>
-        </section>
+            @foreach (var show in group.Shows.Where(s => s != null))
+                    {
+                        @await Html.PartialAsync("_ShowCard", show)
+                    }
+                </div>
+            </section>
+        }
     }
-
 </div>

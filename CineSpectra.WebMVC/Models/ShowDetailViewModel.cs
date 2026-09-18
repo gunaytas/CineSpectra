@@ -21,12 +21,13 @@ public class ShowDetailViewModel
     public int? EpisodesCount { get; set; }
 
     public ShowRatingStatsDto RatingStats { get; set; } = new();
-    public List<CineSpectra.Application.DTOs.GenreDto> Genres { get; set; } = new();
-    public List<CineSpectra.Application.DTOs.CharacterDto> Characters { get; set; } = new();
-    public List<CineSpectra.Application.DTOs.ActorDto> Actors { get; set; } = new();
-    public List<CineSpectra.Application.DTOs.SeasonDto> Seasons { get; set; } = new();
+    public List<GenreDto> Genres { get; set; } = new();
+    public List<CharacterDto> Characters { get; set; } = new();
+    public List<ActorDto> Actors { get; set; } = new();
+    public List<SeasonDto> Seasons { get; set; } = new();
     public List<EpisodesDto> Episodes { get; set; } = new();
-    public List<CineSpectra.Application.DTOs.RatingCriteriaDto> ActiveCriteria { get; set; } = new();
+    public List<RatingCriteriaDto> ActiveCriteria { get; set; } = new();
+    public List<ShowCommentDto> Comments { get; set; } = new();
 }
 
 
@@ -40,6 +41,7 @@ public class RatingCriteriaDto
 
 public class GenreDto
 {
+    public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
 }
 

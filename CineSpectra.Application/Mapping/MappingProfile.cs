@@ -36,6 +36,10 @@ namespace CineSpectra.Application.Mapping
 
             .ForMember(dest => dest.Characters, opt => opt.MapFrom(src => src.Characters));
 
+            CreateMap<Show, ShowListDto>()
+            .ForMember(dest => dest.AverageScore, opt => opt.MapFrom(src => src.CriteriaAverageScore))
+            .ForMember(dest => dest.EpisodeAudienceScore, opt => opt.MapFrom(src => src.EpisodeAudienceScore));
+
         }
     }
 }

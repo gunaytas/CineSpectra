@@ -1,0 +1,265 @@
+﻿@model CineSpectra.WebMVC.Models.ShowRateViewModel
+@{
+    ViewData["Title"] = $"{Model.Title} — Bölüm Oylaması";
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+    @* Üst Panel *@
+    <div class="cs-panel rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border" style="border-color: #3A2A38;">
+        <div class="flex items-center gap-4">
+            @* Madde 10: Postere tıklanınca Show Detayına Git *@
+            <a href="/Shows/@Model.ShowId" class="cs-card w-16 sm:w-20 aspect-[2/3] rounded-xl overflow-hidden flex-shrink-0 shadow-lg block hover:opacity-80 transition-opacity" title="Yapım detayına dön">
+                <img src="@(string.IsNullOrEmpty(Model.CoverImageUrl) ? "/images/default-poster.jpg" : Model.CoverImageUrl)"
+                     alt="@Model.Title" class="w-full h-full object-cover" />
+            </a>
+            <div>
+                <span class="cs-eyebrow block mb-1">BÖLÜM OYLAMASI</span>
+                <a href="/Shows/@Model.ShowId" class="cs-headline text-xl sm:text-2xl font-extrabold italic hover:underline" style="color: var(--ivory);">
+                    @Model.Title
+                </a>
+                <p class="text-xs cs-muted mt-1">İzlediğiniz bölümleri puanlayın. Seçtiğiniz puanlara göre canlı sezon ortalaması hesaplanır.</p>
+            </div>
+        </div>
+
+        <a href="/Shows/@Model.ShowId/Rate" class="cs-btn-ghost text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 flex-shrink-0">
+            <i class="fa-solid fa-sliders text-xs"></i> Genel Kriter Oylaması
+        </a>
+    </div>
+
+    @* Sezonlar ve Altındaki Bölümler *@
+    <div class="space-y-4">
+        @if (Model.Seasons != null && Model.Seasons.Any())
+        {
+            @foreach (var season in Model.Seasons)
+            {
+                <details class="cs-card group rounded-2xl overflow-hidden [&_summary::-webkit-details-marker]:hidden" style="border: 1px solid #3A2A38;">
+                    <summary class="flex items-center justify-between p-5 cursor-pointer select-none bg-[#1d141c]">
+                        <div class="flex items-center gap-3">
+                            <span class="cs-pill-gold px-3 py-1 rounded-lg text-xs font-semibold">
+                                Sezon @season.SeasonNumber
+                            </span>
+                            <span class="font-bold text-base" style="color: var(--ivory);">
+                                @(string.IsNullOrEmpty(season.SeasonName) ? $"{season.SeasonNumber}. Sezon" : season.SeasonName)
+                            </span>
+
+                            @* Madde 6: Canlı Sezon Ortalaması Göstergesi *@
+                            <span class="text-xs font-bold font-mono px-2 py-0.5 rounded bg-[#2a1b26]" style="color: var(--gold);"
+                                  id="season-avg-display-@season.SeasonId"
+                                  data-season-id="@season.SeasonId"
+                                  data-default-score="@(season.CurrentAverageScore > 0 ? season.CurrentAverageScore.ToString("0.0") : "—")">
+                                ★ @(season.CurrentAverageScore > 0 ? season.CurrentAverageScore.ToString("0.0") : "—")
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            @* Madde 6: Sezon Seçimini Sıfırla Butonu *@
+                            <button type="button"
+                                    onclick="event.stopPropagation(); resetSeasonRatings(@season.SeasonId)"
+                                    id="reset-season-btn-@season.SeasonId"
+                                    class="text-xs text-amber-400 hover:underline hidden">
+                                <i class="fa-solid fa-rotate-left"></i> Seçimi Sıfırla
+                            </button>
+                            <span class="text-xs flex items-center gap-2 cs-muted">
+                                @(season.Episodes?.Count ?? 0) Bölüm
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:-rotate-180"></i>
+                            </span>
+                        </div>
+                    </summary>
+
+                    <div class="p-5 space-y-3 border-t" style="border-color: #3A2A38; background: var(--velvet);">
+                        @if (season.Episodes != null && season.Episodes.Any())
+                        {
+                            @foreach (var episode in season.Episodes.OrderBy(e => e.EpisodeNumber))
+                            {
+                                @* Madde 8: Önceki oylama varsa okunup data-previous-score'a yazılır *@
+                                var prevScore = episode.CurrentAverageScore > 0 ? (int?)Math.Round(episode.CurrentAverageScore) : null;
+
+                                <div class="p-3 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3"
+                                     style="background: #191017; border: 1px solid #2d1f2b;">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <span class="text-xs font-mono w-8 flex-shrink-0 cs-muted">
+                                            E@(episode.EpisodeNumber.ToString("D2"))
+                                        </span>
+                                        <span class="text-xs sm:text-sm font-medium truncate" style="color: var(--ivory);" title="@episode.Title">
+                                            @episode.Title
+                                        </span>
+                                        @* Madde 8: Önceki oy göstergesi *@
+                                        @if (prevScore.HasValue)
+                                        {
+                                            <span class="text-[10px] px-2 py-0.5 rounded bg-[#2c1d29] text-amber-300 border border-[#442c40] whitespace-nowrap">
+                                                Önceki Oyunuz: @prevScore
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                                        <input type="hidden"
+                                               class="episode-rating-input"
+                                               data-season-id="@season.SeasonId"
+                                               data-episode-id="@episode.EpisodeId"
+                                               data-previous-score="@(prevScore?.ToString() ?? "")"
+                                               id="episode-input-@episode.EpisodeId"
+                                               value="@(prevScore?.ToString() ?? "")" />
+
+                                        <div class="flex items-center gap-1" id="episode-btns-@episode.EpisodeId">
+                                            @for (int ep = 1; ep <= 10; ep++)
+                                            {
+                                                var isSelected = prevScore == ep;
+                                                <button type="button"
+                                                        onclick="selectInlineScore(@season.SeasonId, @episode.EpisodeId, @ep)"
+                                                        id="episode-btn-@(episode.EpisodeId)-@ep"
+                                                        class="episode-btn-@episode.EpisodeId w-6 h-6 sm:w-7 sm:h-7 rounded-md font-mono text-[11px] font-bold flex items-center justify-center transition-all"
+                                                        style="background: @(isSelected ? "var(--gold)" : "var(--curtain)"); color: @(isSelected ? "var(--velvet)" : "var(--ivory)"); border: 1px solid @(isSelected ? "var(--gold)" : "#3A2A38");">
+                                                    @ep
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </details>
+            }
+        }
+    </div>
+
+    <div class="flex justify-end pt-4">
+        <button type="button" id="save-all-ratings-btn" onclick="submitAllEpisodeRatings()"
+                class="cs-btn-primary text-sm font-bold px-8 py-3 rounded-xl flex items-center gap-2 shadow-lg">
+            <i class="fa-solid fa-check"></i> Oylamayı Kaydet
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const showId = @Model.ShowId;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Açılışta varsa önceki oylamalara göre sezon ortalamalarını hesapla
+            document.querySelectorAll('[id^="season-avg-display-"]').forEach(display => {
+                const sId = display.getAttribute('data-season-id');
+                if (sId) calculateLiveSeasonAvg(parseInt(sId));
+            });
+        });
+
+        function selectInlineScore(seasonId, episodeId, score) {
+            const input = document.getElementById(`episode-input-${episodeId}`);
+            if (input) input.value = score;
+
+            document.querySelectorAll(`.episode-btn-${episodeId}`).forEach(btn => {
+                btn.style.background = "var(--curtain)";
+                btn.style.color = "var(--ivory)";
+                btn.style.borderColor = "#3A2A38";
+            });
+
+            const activeBtn = document.getElementById(`episode-btn-${episodeId}-${score}`);
+            if (activeBtn) {
+                activeBtn.style.background = "var(--gold)";
+                activeBtn.style.color = "var(--velvet)";
+                activeBtn.style.borderColor = "var(--gold)";
+            }
+
+            // Madde 6: Sezon ortalamasını dinamik güncelle ve sıfırla butonunu aç
+            calculateLiveSeasonAvg(seasonId);
+        }
+
+        // Madde 6: Sezon canlı ortalamasını hesaplar
+        function calculateLiveSeasonAvg(seasonId) {
+            const inputs = Array.from(document.querySelectorAll(`.episode-rating-input[data-season-id="${seasonId}"]`));
+            const ratedInputs = inputs.filter(i => i.value !== "" && !isNaN(parseFloat(i.value)));
+            const avgDisplay = document.getElementById(`season-avg-display-${seasonId}`);
+            const resetBtn = document.getElementById(`reset-season-btn-${seasonId}`);
+
+            if (ratedInputs.length > 0) {
+                const total = ratedInputs.reduce((sum, el) => sum + parseFloat(el.value), 0);
+                const avg = (total / ratedInputs.length).toFixed(1);
+                if (avgDisplay) avgDisplay.innerText = `★ ${avg} `;
+                resetBtn?.classList.remove('hidden');
+            } else {
+                if (avgDisplay) {
+                    const defaultScore = avgDisplay.getAttribute('data-default-score') || "—";
+                    avgDisplay.innerText = `★ ${defaultScore}`;
+                }
+                resetBtn?.classList.add('hidden');
+            }
+        }
+
+        // Madde 6: İlgili sezondaki seçimleri sıfırlar
+        function resetSeasonRatings(seasonId) {
+            const inputs = document.querySelectorAll(`.episode-rating-input[data-season-id="${seasonId}"]`);
+            inputs.forEach(input => {
+                input.value = "";
+                const epId = input.getAttribute('data-episode-id');
+                document.querySelectorAll(`.episode-btn-${epId}`).forEach(btn => {
+                    btn.style.background = "var(--curtain)";
+                    btn.style.color = "var(--ivory)";
+                    btn.style.borderColor = "#3A2A38";
+                });
+            });
+
+            calculateLiveSeasonAvg(seasonId);
+        }
+
+        async function submitAllEpisodeRatings() {
+            const ratedInputs = Array.from(document.querySelectorAll('.episode-rating-input'))
+                .filter(input => input.value !== "" && !isNaN(parseFloat(input.value)));
+
+            if (ratedInputs.length === 0) {
+                alert("Lütfen kaydetmeden önce en az bir bölüm için puan seçin.");
+                return;
+            }
+
+            const btn = document.getElementById('save-all-ratings-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kaydediliyor...';
+
+            try {
+                let successCount = 0;
+                let lastError = null;
+
+                for (const input of ratedInputs) {
+                    const epId = parseInt(input.getAttribute('data-episode-id'));
+                    const score = parseFloat(input.value);
+
+                    const response = await fetch('/Shows/SubmitInlineEpisodeRating', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ showId: showId, episodeId: epId, score: score })
+                    });
+
+                    const text = await response.text();
+                    let data = {};
+                    if (text) {
+                        try { data = JSON.parse(text); } catch { data = { message: text }; }
+                    }
+
+                    if (response.ok && (data.success || data.isSuccess)) {
+                        successCount++;
+                    } else {
+                        lastError = data.message || `Bölüm E${epId} kaydedilemedi.`;
+                    }
+                }
+
+                if (successCount === ratedInputs.length) {
+                    alert(`${successCount} adet bölüm puanı başarıyla kaydedildi!`);
+                    window.location.reload();
+                } else if (successCount > 0) {
+                    alert(`${successCount} bölüm puanı kaydedildi, hata verenler: ${lastError}`);
+                    window.location.reload();
+                } else {
+                    alert(lastError || "Puanlar kaydedilemedi.");
+                }
+            } catch (err) {
+                console.error("Hata:", err);
+                alert('Bağlantı hatası oluştu: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+    </script>
+}

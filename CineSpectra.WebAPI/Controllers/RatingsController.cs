@@ -18,9 +18,6 @@ namespace CineSpectra.WebAPI.Controllers
             _ratingService = ratingService;
         }
 
-        // =========================================================================
-        // 1. KRİTERLERİ LİSTELEME
-        // =========================================================================
         [HttpGet("criteria")]
         public async Task<IActionResult> GetRatingCriteria()
         {
@@ -55,34 +52,9 @@ namespace CineSpectra.WebAPI.Controllers
             return await SubmitFullRating(ratingDto);
         }
 
-        // =========================================================================
-        // 3. SEZON OYLAMASI (Bölüm oyu varsa engellenir)
-        // =========================================================================
-        [HttpPost("season")]
-        public async Task<IActionResult> SubmitSeasonRating([FromBody] SubmitEntityRatingDto dto)
-        {
-            if (dto.SeasonId <= 0 || dto.ShowId <= 0)
-                return BadRequest(new { message = "Geçerli bir SeasonId ve ShowId belirtilmelidir." });
+        
 
-            string userId = dto.UserId ?? GetCurrentUserId() ?? "test-user-1";
-
-
-            var result = await _ratingService.SubmitSeasonRatingAsync(
-                dto.SeasonId,
-                dto.ShowId,
-                dto.Score,
-                userId);
-
-            if (result.IsSuccess)
-                return Ok(result);
-
-            // Kural ihlalinde (bölümler daha önce oylandıysa) 400 Bad Request döner
-            return BadRequest(new { message = result.Message });
-        }
-
-        // =========================================================================
-        // 4. BÖLÜM OYLAMASI (Sezon oyu varsa engellenir)
-        // =========================================================================
+        // BÖLÜM OYLAMASI 
         [HttpPost("episode")]
         public async Task<IActionResult> SubmitEpisodeRating([FromBody] SubmitEntityRatingDto dto)
         {
@@ -104,9 +76,7 @@ namespace CineSpectra.WebAPI.Controllers
             return BadRequest(new { message = result.Message });
         }
 
-        // =========================================================================
-        // 5. BİR YAPIMIN DETAYLI İSTATİSTİKLERİ VE KRİTER ORTALAMALARI
-        // =========================================================================
+        // BİR YAPIMIN DETAYLI İSTATİSTİKLERİ VE KRİTER ORTALAMALARI
         [HttpGet("show/{showId:int}")]
         public async Task<IActionResult> GetShowRatingStats(int showId)
         {
@@ -118,9 +88,6 @@ namespace CineSpectra.WebAPI.Controllers
             return Ok(stats);
         }
 
-        // -------------------------------------------------------------------------
-        // YARDIMCI METOTLAR
-        // -------------------------------------------------------------------------
         private string? GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value
@@ -128,7 +95,6 @@ namespace CineSpectra.WebAPI.Controllers
         }
     }
 
-    // Sezon ve Bölüm isteklerini karşılayan ortak DTO modeli
     public class SubmitEntityRatingDto
     {
         public int ShowId { get; set; }

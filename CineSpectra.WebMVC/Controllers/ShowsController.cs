@@ -84,6 +84,7 @@ public class ShowsController : Controller
         return View(model);
     }
 
+
     [HttpPost("Shows/SubmitFullRating")]
     public async Task<IActionResult> SubmitFullRating([FromBody] SubmitFullRatingInputModel input)
     {
@@ -98,19 +99,6 @@ public class ShowsController : Controller
         return StatusCode(500, "Oylama veritabanına işlenemedi.");
     }
 
-    [HttpPost("Shows/SubmitInlineSeasonRating")]
-    public async Task<IActionResult> SubmitInlineSeasonRating([FromBody] InlineEntityVoteInputModel input)
-    {
-        if (!ModelState.IsValid || input.SeasonId <= 0)
-            return BadRequest(new { success = false, message = "Geçersiz sezon bilgisi." });
-
-        var (isSuccess, message) = await _apiService.SubmitSeasonRatingDirectAsync(input.ShowId, input.SeasonId, input.Score);
-
-        if (isSuccess)
-            return Ok(new { success = true, message });
-
-        return BadRequest(new { success = false, message });
-    }
 
     [HttpPost("Shows/SubmitInlineEpisodeRating")]
     public async Task<IActionResult> SubmitInlineEpisodeRating([FromBody] InlineEntityVoteInputModel input)
@@ -126,13 +114,45 @@ public class ShowsController : Controller
         return BadRequest(new { success = false, message });
     }
 
+    [HttpGet("Shows/{id:int}/RateEpisode")]
+    public async Task<IActionResult> RateEpisode(int id)
+    {
+        var show = await _apiService.GetShowDetailsAsync(id);
+        if (show == null) return NotFound();
+
+        var model = new ShowRateViewModel
+        {
+            ShowId = show.Id,
+            Title = show.Title,
+            CoverImageUrl = show.CoverImageUrl,
+            ReleaseYear = show.ReleaseDate?.Year,
+            CurrentAverageScore = show.AverageScore,
+            Type = (MediaType)show.Type,
+            Seasons = show.Seasons?.Select(s => new SeasonRateItemDto
+            {
+                SeasonId = s.Id,
+                SeasonNumber = s.SeasonNumber,
+                SeasonName = s.Name,
+                CurrentAverageScore = s.AverageScore,
+                Episodes = s.Episodes?.Select(e => new EpisodeRateItemDto
+                {
+                    EpisodeId = e.Id,
+                    EpisodeNumber = e.EpisodeNumber,
+                    Title = e.Title,
+                    CurrentAverageScore = e.AverageScore
+                }).ToList() ?? new()
+            }).ToList() ?? new()
+        };
+
+        return View(model);
+    }
+
     public class InlineEntityVoteInputModel
     {
         public int ShowId { get; set; }
-        public int SeasonId { get; set; }
+        //public int SeasonId { get; set; }
         public int EpisodeId { get; set; }
         public double Score { get; set; }
     }
-
 
 }

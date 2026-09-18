@@ -51,12 +51,41 @@ public class ApiService
             EpisodeAudienceScore = showDto.EpisodeAudienceScore, // Diziler için bölüm puanı
             Type = showDto.Type,
             ReleaseDate = showDto.ReleaseDate,
-            Genres = showDto.Genres,
             Seasons = showDto.Seasons,
-            Actors = showDto.Actors,
-            Characters = showDto.Characters,
+
+            Genres = showDto.Genres?.Select(g => new CineSpectra.WebMVC.Models.GenreDto
+            {
+                Id = g.Id,
+                Name = g.Name
+            }).ToList() ?? new(),
+
+            Actors = showDto.Actors?.Select(a => new CineSpectra.WebMVC.Models.ActorDto
+            {
+                Id = a.Id,
+                Name = a.Name,
+                ProfileImageUrl = a.ProfileImageUrl
+            }).ToList() ?? new(),
+
+            Characters = showDto.Characters?.Select(c => new CineSpectra.WebMVC.Models.CharacterDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                ActorId = c.ActorId,
+                ActorName = c.ActorName,
+                ImageUrl = c.ImageUrl,
+                AverageScore = c.AverageScore
+            }).ToList() ?? new(),
+
+            ActiveCriteria = activeCriteria?.Select(ac => new CineSpectra.WebMVC.Models.RatingCriteriaDto
+            {
+                Id = ac.Id,
+                Name = ac.Name,
+                Weight = ac.Weight,
+                Target = ac.Target
+            }).ToList() ?? new(),
+
             RatingStats = showDto.RatingStats,
-            ActiveCriteria = activeCriteria
+            Comments = showDto.Comments
         };
 
         return viewModel;
@@ -113,36 +142,23 @@ public class ApiService
         return response.IsSuccessStatusCode;
     }
 
-    // SEZON OYLAMASI 
-    public async Task<(bool IsSuccess, string Message)> SubmitSeasonRatingDirectAsync(int showId, int seasonId, double score)
+    public async Task<UserShowRatingDto?> GetUserShowRatingAsync(int showId, string userId)
     {
         try
         {
-            var payload = new
-            {
-                showId = showId,
-                seasonId = seasonId,
-                score = score
-            };
+            var response = await _httpClient.GetAsync($"api/Ratings/user-rating?showId={showId}&userId={userId}");
+            if (!response.IsSuccessStatusCode)
+                return null;
 
-            var response = await _httpClient.PostAsJsonAsync("api/Ratings/season", payload);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return (true, "Sezon puanınız başarıyla kaydedildi.");
-            }
-
-            // API'den 400 Bad Request veya hata mesajı döndüyse içeriği oku
-            var errorObj = await response.Content.ReadFromJsonAsync<ApiRatingErrorDto>();
-            return (false, errorObj?.Message ?? "Sezon puanı işlenirken bir kural hatası oluştu.");
+            return await response.Content.ReadFromJsonAsync<UserShowRatingDto>();
         }
-        catch (Exception ex)
+        catch
         {
-            return (false, "Sunucuya bağlanılamadı: " + ex.Message);
+            return null;
         }
     }
 
-    // BÖLÜM OYLAMASI 
+
     public async Task<(bool IsSuccess, string Message)> SubmitEpisodeRatingDirectAsync(int showId, int episodeId, double score)
     {
         try

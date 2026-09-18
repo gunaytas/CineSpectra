@@ -11,7 +11,11 @@ namespace CineSpectra.WebMVC.Models
         public string? CoverImageUrl { get; set; }
         public int? ReleaseYear { get; set; }
         public double CurrentAverageScore { get; set; }
-        public MediaType Type { get; set; } 
+        public MediaType Type { get; set; }
+        public bool HasUserRated { get; set; }
+        public double? PreviousOverallScore { get; set; } // Hızlı oy veya genel puan
+        public string? PreviousComment { get; set; }      // Önceki yorumu
+        public bool IsDetailedVote { get; set; }          // Kriterle mi yoksa hızlı mı oylamış?
 
         public List<CriteriaVoteItemViewModel> Criterias { get; set; } = new();
         public List<SeasonRateItemDto> Seasons { get; set; } = new();
@@ -23,7 +27,8 @@ namespace CineSpectra.WebMVC.Models
         public int CriteriaId { get; set; }
         public string Name { get; set; } = string.Empty;
         public double Weight { get; set; }
-        public int SelectedScore { get; set; } = 7; // Varsayılan puan
+        public int SelectedScore { get; set; } = 7;
+        public double? UserScore { get; set; }
     }
 
     public class SubmitFullRatingInputModel
@@ -71,4 +76,12 @@ namespace CineSpectra.WebMVC.Models
         public string Title { get; set; } = string.Empty;
         public double CurrentAverageScore { get; set; }
     }
+
+    public class UserShowRatingDto
+    {
+        public double OverallScore { get; set; }
+        public string? Comment { get; set; }
+        public List<SubCriteriaRatingInputModel> SubRatings { get; set; } = new();
+    }
+
 }

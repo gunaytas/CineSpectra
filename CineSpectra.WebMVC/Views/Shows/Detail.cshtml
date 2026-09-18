@@ -59,7 +59,6 @@
                     }
                     else
                     {
-                        @* DİZİ: İki Puan Ayrı Rozetlerde *@
                         <div class="flex items-center gap-4 p-2.5 rounded-2xl" style="background: #1f141d; border: 1px solid #3A2A38;">
                             @* 1. Kriter Puanı *@
                             <div class="flex items-center gap-2 border-r pr-4" style="border-color: #3A2A38;">
@@ -124,9 +123,23 @@
                 </div>
 
                 <div class="flex items-center gap-4 pt-4" id="rate">
-                    <a href="/Shows/@Model.Id/Rate" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
-                        <i class="fa-solid fa-star"></i> Şimdi Puanla
-                    </a>
+                    <div class="flex items-center gap-3 flex-wrap pt-4">
+                        @if (Model.Type == CineSpectra.Domain.Enums.MediaType.TVShow)
+                        {
+                            <a href="/Shows/@Model.Id/Rate" class="cs-btn-primary text-xs font-bold px-5 py-3 rounded-xl flex items-center gap-2">
+                                <i class="fa-solid fa-sliders"></i> Kriter Puanla
+                            </a>
+                            <a href="/Shows/@Model.Id/RateEpisode" class="cs-btn-ghost text-xs font-bold px-5 py-3 rounded-xl flex items-center gap-2">
+                                <i class="fa-solid fa-tv" style="color: var(--gold);"></i> Bölüm Puanla
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/Shows/@Model.Id/Rate" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                                <i class="fa-solid fa-star"></i> Şimdi Puanla
+                            </a>
+                        }
+                    </div>
                 </div>
 
             </div>
@@ -280,7 +293,7 @@
             {
                 Eyebrow = "Bölümler",
                 Headline = "Sezonlar ve Bölümler",
-                Subtitle = "Dizinin yayınlanan tüm sezonları ve bölümleri — sezon ve bölümleri ayrı ayrı puanlayın"
+                Subtitle = "Dizinin yayınlanan tüm sezonları ve bölümleri"
                 })
 
         <div class="space-y-4">
@@ -306,14 +319,7 @@
                             </div>
 
                             <div class="flex items-center gap-4 flex-shrink-0">
-                                @* Sezon Oylama Butonu (summary açılmasını tetiklememesi için onclick stopPropagation eklendi) *@
-                                <a href="/Seasons/@season.Id/Rate"
-                                   onclick="event.stopPropagation();"
-                                   class="cs-btn-ghost text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-transform hover:scale-105">
-                                    <i class="fa-solid fa-star text-[10px]" style="color: var(--gold);"></i>
-                                    <span class="hidden sm:inline">Sezonu Puanla</span>
-                                    <span class="sm:hidden">Puanla</span>
-                                </a>
+                                
 
                                 <span class="text-xs flex items-center gap-2 cs-muted">
                                     @(season.Episodes?.Count ?? 0) Bölüm
@@ -353,6 +359,8 @@
                                 <div class="px-5 pb-5 pt-3 space-y-2.5">
                                     @foreach (var episode in season.Episodes.OrderBy(e => e.EpisodeNumber))
                                     {
+                                        var hasVoted = episode.UserScore.HasValue && episode.UserScore.Value > 0;
+
                                         <div class="p-3.5 rounded-xl transition-all duration-200 hover:border-[#4A3444]"
                                              style="background: var(--velvet); border: 1px solid #3A2A38;">
 
@@ -368,19 +376,40 @@
                                                     </span>
                                                 </div>
 
-                                                @* Sağ Taraf: Puan ve Oylama Butonu *@
+                                                @* Sağ Taraf: Ortalama Puan, Kullanıcı Oyu ve Buton *@
                                                 <div class="flex items-center gap-3 flex-shrink-0">
-                                                    @if (episode.AverageScore > 0)
-                                                    {
-                                                        <div class="text-xs font-bold flex items-center gap-1" style="color: var(--gold);">
-                                                            <i class="fa-solid fa-star text-[10px]"></i> @episode.AverageScore.ToString("0.0")
-                                                        </div>
-                                                    }
 
-                                                    <a href="/Episodes/@episode.Id/Rate"
-                                                       class="cs-btn-primary text-[11px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1 shadow-sm">
-                                                        <i class="fa-solid fa-star text-[9px]"></i> Puanla
-                                                    </a>
+                                                    @* 1. Ortalama Puan Rozeti *@
+                                                    <div class="text-xs font-bold flex items-center gap-1" title="Topluluk Puan Ortalaması" style="color: var(--gold);">
+                                                        <i class="fa-solid fa-star text-[10px]"></i>
+                                                        <span>@(episode.AverageScore > 0 ? episode.AverageScore.ToString("0.0") : "—")</span>
+                                                    </div>
+
+                                                    @* 2. Kullanıcı Oy Verdiyse: Kendi Oyu ve Güncelle Butonu *@
+                                                    @if (hasVoted)
+                                                    {
+                                                        @* Kullanıcının Kendi Puanı *@
+                                                        <div class="text-xs font-semibold px-2 py-0.5 rounded-md flex items-center gap-1"
+                                                             style="background: rgba(240, 178, 60, 0.12); border: 1px solid rgba(240, 178, 60, 0.35); color: var(--gold);"
+                                                             title="Sizin Verdiğiniz Puan">
+                                                            <i class="fa-regular fa-star text-[10px]"></i>
+                                                            <span>Oyunuz: <strong>@episode.UserScore.Value.ToString("0.0")</strong></span>
+                                                        </div>
+
+                                                        @* Güncelle Butonu *@
+                                                        <a href="/Episodes/@episode.Id/Rate"
+                                                           class="cs-btn-ghost text-[11px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-colors hover:text-[#F0B23C]">
+                                                            <i class="fa-solid fa-pen-to-square text-[10px]"></i> Güncelle
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        @* 3. Kullanıcı Oy Vermediyse: Puanla Butonu *@
+                                                        <a href="/Episodes/@episode.Id/Rate"
+                                                           class="cs-btn-primary text-[11px] font-bold px-3 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                                                            <i class="fa-solid fa-star text-[9px]"></i> Puanla
+                                                        </a>
+                                                    }
                                                 </div>
 
                                             </div>
@@ -413,5 +442,46 @@
             </div>
         </section>
     }
+
+    <div class="cs-sprocket !my-14"></div>
+
+    <section class="cs-panel rounded-3xl p-6 sm:p-8">
+        <details class="group [&_summary::-webkit-details-marker]:hidden">
+            <summary class="flex items-center justify-between cursor-pointer select-none">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-comments text-lg" style="color: var(--gold);"></i>
+                    <h3 class="cs-headline text-xl font-bold">Kullanıcı Değerlendirmeleri ve İncelemeler</h3>
+                </div>
+                <div class="flex items-center gap-2 cs-pill px-3 py-1.5 rounded-full text-xs font-bold transition-all group-hover:border-[#F0B23C]">
+                    <span>Yorumları Göster / Gizle</span>
+                    <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:-rotate-180"></i>
+                </div>
+            </summary>
+
+            <div class="mt-6 pt-6 border-t space-y-4" style="border-color: #3A2A38;">
+                @if (Model.Comments != null && Model.Comments.Any())
+                {
+                    @foreach (var review in Model.Comments)
+                    {
+                        <div class="p-4 rounded-2xl space-y-2" style="background: var(--velvet); border: 1px solid #3A2A38;">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm" style="color: var(--ivory);">@review.UserId</span>
+                                <div class="flex items-center gap-1 font-mono text-xs font-bold" style="color: var(--gold);">
+                                    <i class="fa-solid fa-star text-[10px]"></i> @review.Score.ToString("0.0")
+                                </div>
+                            </div>
+                            <p class="text-xs sm:text-sm leading-relaxed cs-muted">
+                                @review.Comment
+                            </p>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-center py-6 text-xs cs-muted">Bu yapım için henüz yazılı bir inceleme bırakılmamış.</p>
+                }
+            </div>
+        </details>
+    </section>
 
 </div>

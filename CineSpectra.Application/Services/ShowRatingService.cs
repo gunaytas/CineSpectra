@@ -14,9 +14,6 @@ namespace CineSpectra.Application.Services
             _unitOfWork = unitOfWork;
         }
 
-        // =========================================================================
-        // 1. DİZİ / FİLM KRİTER OYLAMASI (Sanat & Kriter Skoru)
-        // =========================================================================
         public async Task<RatingResultDto> SubmitShowRatingAsync(CreateShowRatingDto dto)
         {
             // TEST USER KODU
@@ -29,7 +26,6 @@ namespace CineSpectra.Application.Services
             if (show == null)
                 return new RatingResultDto { IsSuccess = false, Message = "Yapım bulunamadı." };
 
-            // Özel repo metodunu çağırıyoruz
             var existingRating = await _unitOfWork.MediaRatings.GetUserShowRatingAsync(dto.ShowId, dto.UserId);
 
             // Eğer dto.OverallScore gönderilmediyse CriteriaRatings üzerinden hesapla
@@ -107,98 +103,17 @@ namespace CineSpectra.Application.Services
             };
         }
 
-        // =========================================================================
-        // 2. SEZON OYLAMASI (Bölüm Oyu Varsa Engellenir)
-        // =========================================================================
-        public async Task<RatingResultDto> SubmitSeasonRatingAsync(int seasonId, int showId, double score, string? userId)
-        {
-
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                userId = "test-user-1";
-            }
-
-            var season = await _unitOfWork.Seasons.GetByIdAsync(seasonId);
-            if (season == null)
-                return new RatingResultDto { IsSuccess = false, Message = "Sezon bulunamadı." };
-
-            if (!string.IsNullOrEmpty(userId))
-            {
-                // Kural Kontrolü: Bölüm oyu verilmiş mi?
-                bool hasEpisodeRatings = await _unitOfWork.MediaRatings.HasUserRatedAnyEpisodeInSeasonAsync(seasonId, userId);
-                if (hasEpisodeRatings)
-                {
-                    return new RatingResultDto
-                    {
-                        IsSuccess = false,
-                        Message = "Bu sezonun bölümlerini tek tek puanladığınız için sezonun geneline toplu puan veremezsiniz."
-                    };
-                }
-            }
-
-            var existingSeasonRating = await _unitOfWork.MediaRatings.GetUserSeasonRatingAsync(seasonId, userId);
-
-            if (existingSeasonRating != null)
-            {
-                double oldScore = existingSeasonRating.CalculatedRatingValue;
-                existingSeasonRating.CalculatedRatingValue = score;
-                existingSeasonRating.UpdatedAt = DateTime.UtcNow;
-
-                if (season.VoteCount > 0)
-                {
-                    double totalSum = (season.AverageScore * season.VoteCount) - oldScore + score;
-                    season.AverageScore = Math.Round(totalSum / season.VoteCount, 2);
-                }
-            }
-            else
-            {
-                var rating = new MediaRating
-                {
-                    ShowId = showId,
-                    SeasonId = seasonId,
-                    UserId = userId,
-                    CalculatedRatingValue = score,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await _unitOfWork.MediaRatings.AddAsync(rating);
-
-                double newSeasonAvg = ((season.AverageScore * season.VoteCount) + score) / (season.VoteCount + 1);
-                season.AverageScore = Math.Round(newSeasonAvg, 2);
-                season.VoteCount += 1;
-            }
-
-            await _unitOfWork.SaveChangesAsync();
-            return new RatingResultDto { IsSuccess = true, Message = "Sezon puanınız kaydedildi." };
-        }
-
-        // =========================================================================
-        // 3. BÖLÜM OYLAMASI (Sezon Oyu Varsa Engellenir)
-        // =========================================================================
         public async Task<RatingResultDto> SubmitEpisodeRatingAsync(int episodeId, int showId, double score, string? userId)
         {
-
             if (string.IsNullOrWhiteSpace(userId))
             {
                 userId = "test-user-1";
             }
+
             var episode = await _unitOfWork.Episodes.GetByIdAsync(episodeId);
             var show = await _unitOfWork.Shows.GetByIdAsync(showId);
             if (episode == null || show == null)
                 return new RatingResultDto { IsSuccess = false, Message = "Bölüm veya yapım bulunamadı." };
-
-            if (!string.IsNullOrEmpty(userId))
-            {
-                // Kural Kontrolü: Sezon oyu verilmiş mi?
-                bool hasSeasonRating = await _unitOfWork.MediaRatings.HasUserRatedSeasonAsync(episode.SeasonId, userId);
-                if (hasSeasonRating)
-                {
-                    return new RatingResultDto
-                    {
-                        IsSuccess = false,
-                        Message = "Bu sezonun geneline toplu puan verdiğiniz için bölümleri ayrıca puanlayamazsınız."
-                    };
-                }
-            }
 
             var existingEpisodeRating = await _unitOfWork.MediaRatings.GetUserEpisodeRatingAsync(episodeId, userId);
 
@@ -208,12 +123,14 @@ namespace CineSpectra.Application.Services
                 existingEpisodeRating.CalculatedRatingValue = score;
                 existingEpisodeRating.UpdatedAt = DateTime.UtcNow;
 
+                // 1. Bölümün Kendi Ortalamasını Güncelle
                 if (episode.VoteCount > 0)
                 {
                     double totalEpSum = (episode.AverageScore * episode.VoteCount) - oldScore + score;
                     episode.AverageScore = Math.Round(totalEpSum / episode.VoteCount, 2);
                 }
 
+                // 2. Dizinin Genel Seyirci Skorunu Güncelle
                 if (show.TotalEpisodeVoteCount > 0 && show.EpisodeAudienceScore.HasValue)
                 {
                     double totalAudienceSum = (show.EpisodeAudienceScore.Value * show.TotalEpisodeVoteCount) - oldScore + score;
@@ -233,23 +150,39 @@ namespace CineSpectra.Application.Services
                 };
                 await _unitOfWork.MediaRatings.AddAsync(rating);
 
+                // 1. Bölüm Sayacını Güncelle
                 double newEpAvg = ((episode.AverageScore * episode.VoteCount) + score) / (episode.VoteCount + 1);
                 episode.AverageScore = Math.Round(newEpAvg, 2);
                 episode.VoteCount += 1;
 
+                // 2. Dizinin Genel Seyirci Skorunu Güncelle
                 double currentAudienceScore = show.EpisodeAudienceScore ?? 0.0;
                 double newAudienceAvg = ((currentAudienceScore * show.TotalEpisodeVoteCount) + score) / (show.TotalEpisodeVoteCount + 1);
                 show.EpisodeAudienceScore = Math.Round(newAudienceAvg, 1);
                 show.TotalEpisodeVoteCount += 1;
             }
 
+            // 3. SEZON ORTALAMASINI OTOMATİK HESAPLA VE KAYDET
+            var season = await _unitOfWork.Seasons.GetByIdAsync(episode.SeasonId);
+            if (season != null)
+            {
+                // Sezonun puan almış tüm bölümlerini al
+                var seasonEpisodes = await _unitOfWork.Episodes.FindAsync(e => e.SeasonId == season.Id);
+                var ratedEpisodes = seasonEpisodes.Where(e => e.VoteCount > 0).ToList();
+
+                if (ratedEpisodes.Any())
+                {
+                    // Sezon puanı = Bölüm puanlarının ortalaması
+                    season.AverageScore = Math.Round(ratedEpisodes.Average(e => e.AverageScore), 1);
+                    season.VoteCount = ratedEpisodes.Sum(e => e.VoteCount);
+                }
+            }
+
             await _unitOfWork.SaveChangesAsync();
             return new RatingResultDto { IsSuccess = true, Message = "Bölüm puanınız kaydedildi." };
         }
 
-        // =========================================================================
-        // 4. KRİTERLERİ GETİR
-        // =========================================================================
+        // KRİTERLERİ GETİR
         public async Task<List<RatingCriteriaDto>> GetAllCriteriaAsync()
         {
             var criteriaList = await _unitOfWork.RatingCriterias.GetAllAsync();
@@ -262,9 +195,7 @@ namespace CineSpectra.Application.Services
             }).ToList();
         }
 
-        // =========================================================================
-        // 5. KRİTER BAZLI İSTATİSTİKLER (Detay Sayfası Kriter Barları)
-        // =========================================================================
+        // KRİTER BAZLI İSTATİSTİKLER (Detay Sayfası Kriter Barları)
         public async Task<ShowRatingStatsDto> GetShowRatingStatsAsync(int showId)
         {
             var ratings = await _unitOfWork.MediaRatings.GetRatingsByShowIdWithCriteriaAsync(showId);
@@ -292,11 +223,39 @@ namespace CineSpectra.Application.Services
                 })
                 .ToList();
 
+            var calculatedTotalVotes = ratings
+        .Where(r => !string.IsNullOrEmpty(r.UserId))
+        .GroupBy(r => r.UserId)
+        .Sum(userGroup =>
+        {
+            // Kullanıcı yapım düzeyinde (kriter/genel) oy kullanmış mı?
+            bool hasShowRating = userGroup.Any(r => r.SeasonId == null && r.EpisodeId == null);
+
+            // Kullanıcı sezon veya bölüm düzeyinde oy kullanmış mı?
+            bool hasSeasonOrEpisodeRating = userGroup.Any(r => r.SeasonId != null || r.EpisodeId != null);
+
+            int voteWeight = 0;
+            if (hasShowRating) voteWeight += 1;
+            if (hasSeasonOrEpisodeRating) voteWeight += 1;
+
+            return voteWeight;
+        });
+
+            // Anonim (UserId boş olan) oylar varsa doğrudan 1 sayılacak şekilde eklenir
+            int anonymousVotes = ratings.Count(r => string.IsNullOrEmpty(r.UserId));
+            int finalTotalVotes = calculatedTotalVotes + anonymousVotes;
+
+            // 3. Genel ortalama puan (Yalnızca Show düzeyindeki ana puanlardan alınır)
+            var showLevelRatings = ratings.Where(r => r.SeasonId == null && r.EpisodeId == null).ToList();
+            double overallAvg = showLevelRatings.Any()
+                ? Math.Round(showLevelRatings.Average(r => r.CalculatedRatingValue), 2)
+                : Math.Round(ratings.Average(r => r.CalculatedRatingValue), 2);
+
             return new ShowRatingStatsDto
             {
                 ShowId = showId,
-                OverallAverageScore = Math.Round(ratings.Average(r => r.CalculatedRatingValue), 2),
-                TotalVotes = ratings.Count,
+                OverallAverageScore = overallAvg,
+                TotalVotes = finalTotalVotes,
                 CriteriaAverages = criteriaAverages
             };
         }
