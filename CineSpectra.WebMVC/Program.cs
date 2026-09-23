@@ -4,6 +4,7 @@ using CineSpectra.Infrastructure.Persistence;
 using CineSpectra.Infrastructure.Repositories;
 using CineSpectra.WebMVC.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,17 @@ builder.Services.AddHttpClient<ApiService>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7101");
 });
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(opt =>
+    {
+        opt.LoginPath = "/Account/Login";
+        opt.AccessDeniedPath = "/Account/AccessDenied";
+        opt.Cookie.Name = "CineSpectra.Auth";
+        opt.ExpireTimeSpan = TimeSpan.FromDays(7);
+    });
+
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

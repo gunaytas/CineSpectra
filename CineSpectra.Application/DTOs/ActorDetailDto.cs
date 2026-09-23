@@ -14,6 +14,7 @@ namespace CineSpectra.Application.DTOs
 
         public ShowRatingStatsDto? RatingStats { get; set; }
         public List<ActorCreditDto> Filmography { get; set; } = new();
+        public List<ShowCommentDto> Comments { get; set; } = new();
     }
 
     public class ActorCreditDto

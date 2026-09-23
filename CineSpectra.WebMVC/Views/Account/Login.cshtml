@@ -1,0 +1,84 @@
+﻿@model CineSpectra.Application.DTOs.LoginDto
+@{
+    ViewData["Title"] = "Giriş Yap";
+    var returnUrl = ViewBag.ReturnUrl as string;
+    var message = Context.Request.Query["message"].ToString();
+}
+
+<div class="min-h-[75vh] flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md space-y-6">
+
+        @* Üst Logo / Başlık *@
+        <div class="text-center space-y-2">
+            <span class="cs-eyebrow tracking-widest text-xs uppercase block">CINESPECTRA OTURUMU</span>
+            <h1 class="text-3xl font-extrabold italic" style="color: var(--ivory);">
+                Gece Seansına Dönün
+            </h1>
+            <p class="text-xs cs-muted">
+                Kişiselleştirilmiş oylama ve sinema karnenize erişin.
+            </p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="p-4 rounded-2xl text-xs flex items-center gap-3 border"
+                 style="background: rgba(46, 125, 50, 0.15); border-color: #2e7d32; color: #81c784;">
+                <i class="fa-solid fa-circle-check text-sm"></i>
+                <span>@message</span>
+            </div>
+        }
+
+        @* Giriş Kartı *@
+        <div class="cs-panel rounded-3xl p-6 sm:p-8 space-y-6 border" style="border-color: #3A2A38;">
+            <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@returnUrl" method="post" class="space-y-4">
+
+                <div asp-validation-summary="ModelOnly" class="text-xs text-red-400 p-3 rounded-xl bg-red-950/30 border border-red-900/50"></div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold cs-muted uppercase tracking-wider">Kullanıcı Adı veya E-Posta</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-xs cs-muted"></i>
+                        <input asp-for="UserNameOrEmail"
+                               placeholder="kullanici veya ornek@cinespectra.com"
+                               required
+                               autocomplete="username"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                               style="background: var(--velvet); border: 1px solid #3A2A38; color: var(--ivory);" />
+                    </div>
+                    <span asp-validation-for="UserNameOrEmail" class="text-[11px] text-red-400"></span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold cs-muted uppercase tracking-wider">Şifre</label>
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-xs cs-muted"></i>
+                        <input asp-for="Password"
+                               type="password"
+                               placeholder="••••••••"
+                               required
+                               autocomplete="current-password"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                               style="background: var(--velvet); border: 1px solid #3A2A38; color: var(--ivory);" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-[11px] text-red-400"></span>
+                </div>
+
+                <button type="submit"
+                        class="cs-btn-primary w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg mt-2">
+                    <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+                    <span>Giriş Yap</span>
+                </button>
+            </form>
+
+            <div class="border-t pt-4 text-center text-xs cs-muted" style="border-color: #3A2A38;">
+                Henüz CineSpectra hesabınız yok mu?
+                <a href="/Account/Register" class="font-bold hover:underline ml-1" style="color: var(--gold);">
+                    Hemen Kaydolun
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>

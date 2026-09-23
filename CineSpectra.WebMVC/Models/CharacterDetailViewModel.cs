@@ -15,6 +15,7 @@ namespace CineSpectra.WebMVC.Models
 
         public List<CharacterShowCreditViewModel> Shows { get; set; } = new();
         public ShowRatingStatsDto? RatingStats { get; set; }
+        public List<ShowCommentDto> Comments { get; set; } = new();
     }
 
     public class CharacterShowCreditViewModel

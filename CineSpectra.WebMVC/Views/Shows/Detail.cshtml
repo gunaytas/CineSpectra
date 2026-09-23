@@ -126,18 +126,52 @@
                     <div class="flex items-center gap-3 flex-wrap pt-4">
                         @if (Model.Type == CineSpectra.Domain.Enums.MediaType.TVShow)
                         {
-                            <a href="/Shows/@Model.Id/Rate" class="cs-btn-primary text-xs font-bold px-5 py-3 rounded-xl flex items-center gap-2">
-                                <i class="fa-solid fa-sliders"></i> Kriter Puanla
-                            </a>
-                            <a href="/Shows/@Model.Id/RateEpisode" class="cs-btn-ghost text-xs font-bold px-5 py-3 rounded-xl flex items-center gap-2">
-                                <i class="fa-solid fa-tv" style="color: var(--gold);"></i> Bölüm Puanla
-                            </a>
+                            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            {
+                                <a href="/Shows/@Model.Id/Rate" class="cs-btn-primary text-xs font-bold px-5 py-3 rounded-xl flex items-center gap-2">
+                                    <i class="fa-solid fa-sliders"></i> Kriter Puanla
+                                </a>
+                                <a href="/Shows/@Model.Id/RateEpisode" class="cs-btn-ghost text-xs font-bold px-5 py-3 rounded-xl flex items-center gap-2">
+                                    <i class="fa-solid fa-tv" style="color: var(--gold);"></i> Bölüm Puanla
+                                </a>
+                            }
+                            else
+                            {
+                                @* Giriş Yapmamış Kullanıcı: Uyarı rozeti ve Giriş Butonu *@
+                                <div class="flex flex-col items-start sm:items-center gap-1.5">
+                                    <a href="/Account/Login?returnUrl=@Url.Action("Rate", "Shows", new { id = Model.Id })"
+                                       class="cs-btn-primary text-sm font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 transition-transform">
+                                        <i class="fa-solid fa-right-to-bracket"></i> Puanlamak İçin Giriş Yap
+                                    </a>
+                                    <span class="text-[11px] cs-muted flex items-center gap-1.5 pl-1" style="color: var(--mauve);">
+                                        <i class="fa-solid fa-lock text-[10px]" style="color: var(--gold);"></i>
+                                        Puan verebilmek ve inceleme yazabilmek için oturum açmalısınız.
+                                    </span>
+                                </div>
+                            }
                         }
                         else
                         {
-                            <a href="/Shows/@Model.Id/Rate" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
-                                <i class="fa-solid fa-star"></i> Şimdi Puanla
-                            </a>
+                            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            {
+                                <a href="/Shows/@Model.Id/Rate" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                                    <i class="fa-solid fa-star"></i> Şimdi Puanla
+                                </a>
+                            }
+                            else
+                            {
+                                @* Giriş Yapmamış Kullanıcı: Uyarı rozeti ve Giriş Butonu *@
+                                <div class="flex flex-col items-start sm:items-center gap-1.5">
+                                    <a href="/Account/Login?returnUrl=@Url.Action("Rate", "Shows", new { id = Model.Id })"
+                                       class="cs-btn-primary text-sm font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 transition-transform">
+                                        <i class="fa-solid fa-right-to-bracket"></i> Puanlamak İçin Giriş Yap
+                                    </a>
+                                    <span class="text-[11px] cs-muted flex items-center gap-1.5 pl-1" style="color: var(--mauve);">
+                                        <i class="fa-solid fa-lock text-[10px]" style="color: var(--gold);"></i>
+                                        Puan verebilmek ve inceleme yazabilmek için oturum açmalısınız.
+                                    </span>
+                                </div>
+                            }
                         }
                     </div>
                 </div>
@@ -404,11 +438,28 @@
                                                     }
                                                     else
                                                     {
-                                                        @* 3. Kullanıcı Oy Vermediyse: Puanla Butonu *@
-                                                        <a href="/Episodes/@episode.Id/Rate"
-                                                           class="cs-btn-primary text-[11px] font-bold px-3 py-1 rounded-md flex items-center gap-1 shadow-sm">
-                                                            <i class="fa-solid fa-star text-[9px]"></i> Puanla
-                                                        </a>
+                                                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                                        {
+                                                            @* 3. Kullanıcı Oy Vermediyse: Puanla Butonu *@
+                                                            <a href="/Episodes/@episode.Id/Rate"
+                                                               class="cs-btn-primary text-[11px] font-bold px-3 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                                                                <i class="fa-solid fa-star text-[9px]"></i> Puanla
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            @* Giriş Yapmamış Kullanıcı: Uyarı rozeti ve Giriş Butonu *@
+                                                            <div class="flex flex-col items-start sm:items-center gap-1.5">
+                                                                <a href="/Account/Login?returnUrl=@Url.Action("Rate", "Shows", new { id = Model.Id })"
+                                                                   class="cs-btn-primary text-sm font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 transition-transform">
+                                                                    <i class="fa-solid fa-right-to-bracket"></i> Puanlamak İçin Giriş Yap
+                                                                </a>
+                                                                <span class="text-[11px] cs-muted flex items-center gap-1.5 pl-1" style="color: var(--mauve);">
+                                                                    <i class="fa-solid fa-lock text-[10px]" style="color: var(--gold);"></i>
+                                                                    Puan verebilmek ve inceleme yazabilmek için oturum açmalısınız.
+                                                                </span>
+                                                            </div>
+                                                        }
                                                     }
                                                 </div>
 

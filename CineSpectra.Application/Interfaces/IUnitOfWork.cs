@@ -14,6 +14,10 @@ namespace CineSpectra.Application.Interfaces
         IShowRepository Shows { get; }
         IGenericRepository<Season> Seasons { get; }
         IGenericRepository<Episode> Episodes { get; }
+        IActorRepository Actors { get; }
+        IGenericRepository<ActorRating> ActorRatings { get; }
+        ICharacterRepository Characters { get; }
+        IGenericRepository<CharacterRating> CharacterRatings { get; }
         Task<int> SaveChangesAsync();
     }
 }

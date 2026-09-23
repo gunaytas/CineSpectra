@@ -1,23 +1,27 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CineSpectra.Application.DTOs;
 using CineSpectra.Application.Interfaces;
-using CineSpectra.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace CineSpectra.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] 
     public class RatingsController : ControllerBase
     {
         private readonly IShowRatingService _ratingService;
-
-        private const string DEFAULT_TEST_USER_ID = "test-user-1";
 
         public RatingsController(IShowRatingService ratingService)
         {
             _ratingService = ratingService;
         }
 
+        // =========================================================================
+        // 1. KRİTERLERİ LİSTELEME (Anonim erişime açık)
+        // =========================================================================
+        [AllowAnonymous]
         [HttpGet("criteria")]
         public async Task<IActionResult> GetRatingCriteria()
         {
@@ -34,8 +38,11 @@ namespace CineSpectra.WebAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Giriş yapmış kullanıcı varsa ID'sini token/claim üzerinden bağla
-            ratingDto.UserId ??= GetCurrentUserId();
+            var currentUserId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(currentUserId))
+                return Unauthorized(new { message = "Oy kullanabilmek için giriş yapmalısınız." });
+
+            ratingDto.UserId = currentUserId;
 
             var result = await _ratingService.SubmitShowRatingAsync(ratingDto);
 
@@ -52,31 +59,36 @@ namespace CineSpectra.WebAPI.Controllers
             return await SubmitFullRating(ratingDto);
         }
 
-        
 
-        // BÖLÜM OYLAMASI 
+        // =========================================================================
+        // 4. BÖLÜM OYLAMASI 
+        // =========================================================================
         [HttpPost("episode")]
         public async Task<IActionResult> SubmitEpisodeRating([FromBody] SubmitEntityRatingDto dto)
         {
             if (dto.EpisodeId <= 0 || dto.ShowId <= 0)
                 return BadRequest(new { message = "Geçerli bir EpisodeId ve ShowId belirtilmelidir." });
 
-            string userId = dto.UserId ?? GetCurrentUserId() ?? "test-user-1";
+            var currentUserId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(currentUserId))
+                return Unauthorized(new { message = "Oy kullanabilmek için giriş yapmalısınız." });
 
             var result = await _ratingService.SubmitEpisodeRatingAsync(
                 dto.EpisodeId,
                 dto.ShowId,
                 dto.Score,
-                userId);
+                currentUserId);
 
             if (result.IsSuccess)
                 return Ok(result);
 
-            // Kural ihlalinde (sezonun geneli daha önce oylandıysa) 400 Bad Request döner
             return BadRequest(new { message = result.Message });
         }
 
-        // BİR YAPIMIN DETAYLI İSTATİSTİKLERİ VE KRİTER ORTALAMALARI
+        // =========================================================================
+        // 5. BİR YAPIMIN İSTATİSTİKLERİ (Anonim erişime açık)
+        // =========================================================================
+        [AllowAnonymous]
         [HttpGet("show/{showId:int}")]
         public async Task<IActionResult> GetShowRatingStats(int showId)
         {
@@ -88,6 +100,9 @@ namespace CineSpectra.WebAPI.Controllers
             return Ok(stats);
         }
 
+        // -------------------------------------------------------------------------
+        // YARDIMCI METOTLAR
+        // -------------------------------------------------------------------------
         private string? GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value

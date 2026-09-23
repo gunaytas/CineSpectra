@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using CineSpectra.WebMVC.Services;
+﻿using CineSpectra.Domain.Enums;
 using CineSpectra.WebMVC.Models;
+using CineSpectra.WebMVC.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CineSpectra.WebMVC.Controllers;
 
@@ -36,5 +37,49 @@ public class ActorsController : Controller
         }
 
         return StatusCode(500, "Oylama kaydedilirken bir hata oluştu.");
+    }
+
+    [HttpGet("Actors/{id:int}/Rate")]
+    public async Task<IActionResult> Rate(int id)
+    {
+        var actor = await _apiService.GetActorDetailsAsync(id);
+        if (actor == null) return NotFound();
+
+        // Sadece CriteriaTarget == Actor (3) olan kriterleri alıyoruz
+        var allCriteria = await _apiService.GetAllCriteriaAsync();
+        var actorCriteria = allCriteria
+            .Where(c => c.Target == CriteriaTarget.Actor || (int)c.Target == 3)
+            .Select(c => new ActorCriteriaVoteItemViewModel
+            {
+                CriteriaId = c.Id,
+                Name = c.Name,
+                Weight = c.Weight
+            }).ToList();
+
+        var model = new ActorRateViewModel
+        {
+            ActorId = actor.Id,
+            Name = actor.Name,
+            ProfileImageUrl = actor.ProfileImageUrl,
+            Age = actor.BirthDate.HasValue ? DateTime.Today.Year - actor.BirthDate.Value.Year : null,
+            CurrentAverageScore = actor.AverageScore,
+            Criterias = actorCriteria
+        };
+
+        return View(model);
+    }
+
+    [HttpPost("Actors/SubmitRating")]
+    public async Task<IActionResult> SubmitRatingDetailed([FromBody] SubmitActorRatingInputModel input)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var result = await _apiService.SubmitActorRatingAsync(input);
+        if (result)
+        {
+            return Ok(new { success = true, message = "Oylamanız başarıyla kaydedildi!" });
+        }
+
+        return StatusCode(500, new { success = false, message = "Oylama kaydedilemedi." });
     }
 }

@@ -15,6 +15,7 @@ namespace CineSpectra.WebMVC.Models
 
         // Oyuncunun yer aldığı yapımlar ve canlandırdığı karakterler
         public List<ActorCreditViewModel> Filmography { get; set; } = new();
+        public List<ShowCommentDto> Comments { get; set; } = new();
     }
 
     public class ActorCreditViewModel

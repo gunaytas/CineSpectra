@@ -50,7 +50,7 @@ namespace CineSpectra.Application.Services
             return _mapper.Map<IEnumerable<ShowListDto>>(results);
         }
 
-        public async Task<ShowDetailDto?> GetShowDetailAsync(int id)
+        public async Task<ShowDetailDto?> GetShowDetailAsync(int id, string? userId = null)
         {
             var show = await _unitOfWork.Shows.GetShowDetailWithCastAndGenresAsync(id);
 
@@ -61,17 +61,27 @@ namespace CineSpectra.Application.Services
             // 1. Kriter istatistiklerini bağla
             showDto.RatingStats = await _ratingService.GetShowRatingStatsAsync(id);
 
+            Dictionary<int, double> userEpisodeRatings = new();
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var userRatings = await _unitOfWork.MediaRatings.FindAsync(r =>
+                    r.ShowId == id &&
+                    r.UserId == userId &&
+                    r.EpisodeId != null);
 
-            string currentUserId = "test-user-1";
+                userEpisodeRatings = userRatings
+                    .ToDictionary(r => r.EpisodeId!.Value, r => r.CalculatedRatingValue);
+            }
+
 
             if (showDto.Seasons != null && showDto.Seasons.Any()) 
             {
-                        double totalAudienceScoreSum = 0; 
+                double totalAudienceScoreSum = 0; 
                 int totalAudienceVoteCount = 0; 
 
                 foreach (var seasonDto in showDto.Seasons) 
                 {
-                            var entitySeason = show.Seasons.FirstOrDefault(s => s.Id == seasonDto.Id); 
+                    var entitySeason = show.Seasons.FirstOrDefault(s => s.Id == seasonDto.Id); 
                     if (entitySeason == null) continue; 
 
                     double directSeasonScore = entitySeason.AverageScore; 
@@ -87,37 +97,35 @@ namespace CineSpectra.Application.Services
                     int combinedSeasonVotes = directSeasonVotes + episodesTotalVotes; 
                     if (combinedSeasonVotes > 0) 
                     {
-                                double combinedSeasonScore = (directSeasonScore * directSeasonVotes + episodesTotalScoreSum) / combinedSeasonVotes; 
+                        double combinedSeasonScore = (directSeasonScore * directSeasonVotes + episodesTotalScoreSum) / combinedSeasonVotes; 
                         seasonDto.AverageScore = Math.Round(combinedSeasonScore, 1); 
                     }
                     else
-                            {
-                                seasonDto.AverageScore = 0.0; 
+                    {
+                        seasonDto.AverageScore = 0.0; 
                     }
-
-                            totalAudienceScoreSum += (directSeasonScore * directSeasonVotes) + episodesTotalScoreSum; 
+                    
+                    totalAudienceScoreSum += (directSeasonScore * directSeasonVotes) + episodesTotalScoreSum; 
                     totalAudienceVoteCount += combinedSeasonVotes;
 
                     // 👇 Bölümlere ait kullanıcı oylarını (UserScore) burada dolduruyoruz
                     if (seasonDto.Episodes != null && seasonDto.Episodes.Any())
+                    {
+                        foreach (var episodeDto in seasonDto.Episodes)
+                        {
+                            if (userEpisodeRatings.TryGetValue(episodeDto.Id, out var score))
                             {
-                                foreach (var episodeDto in seasonDto.Episodes)
-                                {
-                                    var userRating = await _unitOfWork.MediaRatings
-                                        .GetUserEpisodeRatingAsync(episodeDto.Id, currentUserId); 
-
-                            episodeDto.UserScore = userRating?.CalculatedRatingValue;
-                        }
+                                episodeDto.UserScore = score;
                             }
                         }
-
-                        if (totalAudienceVoteCount > 0) 
-                {
-                            showDto.EpisodeAudienceScore = Math.Round(totalAudienceScoreSum / totalAudienceVoteCount, 1); 
-                }
                     }
-
-
+                }
+                
+                if (totalAudienceVoteCount > 0)
+                {
+                    showDto.EpisodeAudienceScore = Math.Round(totalAudienceScoreSum / totalAudienceVoteCount, 1); 
+                }
+            }
 
             // 3. MediaRatings tablosundan yapıma ait yazılı yorumları çek ve bağla
             var ratings = await _unitOfWork.MediaRatings.GetRatingsByShowIdWithCriteriaAsync(id);

@@ -41,7 +41,7 @@ namespace CineSpectra.Infrastructure.Repositories
 
             return await _context.Shows
                 .Include(s => s.Genres) 
-                .Where(s => EF.Functions.Like(s.Title, $"%{searchTerm}%"))
+                .Where(s => EF.Functions.ILike(s.Title, $"%{searchTerm}%"))
                 .ToListAsync();
         }
 

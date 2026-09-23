@@ -384,6 +384,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-4">
 
+                @* 1. LOGO ALANI *@
                 <div class="flex-shrink-0 flex items-center">
                     <a href="/" class="flex items-center gap-2.5 group">
                         <div class="w-9 h-9 rounded-full flex items-center justify-center border transition-transform group-hover:scale-105"
@@ -396,33 +397,86 @@
                     </a>
                 </div>
 
+                @* 2. MERKEZİ ARAMA KUTUSU *@
                 <div class="hidden md:flex flex-1 max-w-md mx-8">
-                    <div class="relative w-full">
-                        <input type="text" placeholder="Film, dizi veya oyuncu ara..."
-                               class="cs-search-input w-full text-sm pl-10 pr-4 py-2 rounded-full" />
-                        <div class="absolute left-3 top-2.5" style="color: var(--mauve);">
+                    <form method="get" action="/shows/search" class="relative w-full">
+                        <input type="text"
+                               name="q"
+                               placeholder="Film, dizi, oyuncu veya karakter ara..."
+                               autocomplete="off"
+                               class="cs-search-input w-full text-sm pl-10 pr-10 py-2 rounded-full transition-all focus:outline-none focus:ring-1 focus:ring-amber-400"
+                               style="background: #170F15; border: 1px solid #3A2A38; color: var(--ivory);" />
+
+                        <button type="submit"
+                                title="Ara"
+                                class="absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors hover:text-amber-400"
+                                style="color: var(--mauve); background: none; border: none; padding: 0; cursor: pointer;">
                             <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                        </div>
-                    </div>
+                        </button>
+                    </form>
                 </div>
 
+                @* 3. SAĞ NAVİGASYON VE AUTH ALANI *@
                 <nav class="flex items-center gap-6">
+                    @* Ana Gezinme Linkleri *@
                     <div class="hidden sm:flex items-center gap-6 text-sm font-medium">
-                        <a href="/Shows/Movies" class="cs-nav-link flex items-center gap-1.5"><i class="fa-solid fa-film text-xs"></i> Filmler</a>
-                        <a href="/Shows/TvShows" class="cs-nav-link flex items-center gap-1.5"><i class="fa-solid fa-tv text-xs"></i> Diziler</a>
-                        <a href="/Ratings/Criteria" class="cs-nav-link flex items-center gap-1.5"><i class="fa-solid fa-star text-xs"></i> Kriterler</a>
+                        <a href="/shows/movies" class="cs-nav-link flex items-center gap-1.5 transition-colors hover:text-amber-400">
+                            <i class="fa-solid fa-film text-xs"></i> Filmler
+                        </a>
+                        <a href="/shows/tvshows" class="cs-nav-link flex items-center gap-1.5 transition-colors hover:text-amber-400">
+                            <i class="fa-solid fa-tv text-xs"></i> Diziler
+                        </a>
                     </div>
 
+                    @* Dinamik Oturum Yönetimi *@
                     <div class="flex items-center gap-3 border-l pl-6" style="border-color: #3A2A38;">
-                        <button class="cs-nav-link text-sm font-medium hidden sm:inline">Giriş Yap</button>
-                        <a href="/auth/register" class="cs-btn-primary text-xs font-semibold px-4 py-2 rounded-full">Üye Ol</a>
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            @* Admin Rolüne Özel Buton *@
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a href="/Admin"
+                                   class="cs-pill-gold text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-transform hover:scale-105"
+                                   title="Admin Kontrol Paneli">
+                                    <i class="fa-solid fa-shield-halved text-[11px]"></i> Admin
+                                </a>
+                            }
+
+                            @* Giriş Yapan Kullanıcı Adı *@
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold flex items-center gap-1.5" style="color: var(--ivory);">
+                                    <i class="fa-solid fa-circle-user text-sm" style="color: var(--gold);"></i>
+                                    <span class="max-w-[120px] truncate">@User.Identity.Name</span>
+                                </span>
+
+                                @* Çıkış Yap Butonu *@
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
+                                    <button type="submit"
+                                            class="cs-btn-ghost text-xs font-bold p-1.5 rounded-lg hover:text-red-400 transition-colors"
+                                            title="Oturumu Kapat">
+                                        <i class="fa-solid fa-power-off text-xs"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            @* Oturum Açmamış Ziyaretçi Butonları *@
+                            <a href="/Account/Login"
+                               class="cs-nav-link text-xs sm:text-sm font-medium transition-colors hover:text-amber-400">
+                                Giriş Yap
+                            </a>
+                            <a href="/Account/Register"
+                               class="cs-btn-primary text-xs font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105 shadow-md">
+                                Üye Ol
+                            </a>
+                        }
                     </div>
                 </nav>
 
             </div>
         </div>
     </header>
-
     <main class="flex-grow relative z-10">
         @RenderBody()
     </main>

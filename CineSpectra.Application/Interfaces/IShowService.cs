@@ -14,6 +14,6 @@ namespace CineSpectra.Application.Interfaces
         Task<IEnumerable<ShowListDto>> GetTvShowsAsync();
         Task<IEnumerable<ShowListDto>> SearchAsync(string searchTerm);
 
-        Task<ShowDetailDto?> GetShowDetailAsync(int id);
+        Task<ShowDetailDto?> GetShowDetailAsync(int id, string? userId = null);
     }
 }

@@ -88,9 +88,25 @@
 
                 @* Puanla Butonu *@
                 <div class="flex items-center gap-4 pt-4" id="rate">
-                    <a href="#rating-breakdown" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
-                        <i class="fa-solid fa-star"></i> Karakteri Puanla
-                    </a>
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <a href="/Characters/@Model.Id/Rate" class="cs-btn-primary text-sm font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-star"></i> Karakteri Puanla
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="flex flex-col items-start sm:items-center gap-1.5">
+                            <a href="/Account/Login?returnUrl=@Url.Action("Rate", "Characters", new { id = Model.Id })"
+                               class="cs-btn-primary text-sm font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-right-to-bracket"></i> Puanlamak İçin Giriş Yap
+                            </a>
+                            <span class="text-[11px] cs-muted flex items-center gap-1.5 pl-1" style="color: var(--mauve);">
+                                <i class="fa-solid fa-lock text-[10px]" style="color: var(--gold);"></i>
+                                Puan verebilmek ve inceleme yazabilmek için oturum açmalısınız.
+                            </span>
+                        </div>
+                    }
                 </div>
 
             </div>
@@ -209,6 +225,58 @@
                 Karakterin ilişkilendirildiği yapım kaydı bulunamadı.
             </div>
         }
+    </section>
+
+    <div class="cs-sprocket !my-14"></div>
+
+    @* ==========================================
+   KULLANICI DEĞERLENDİRMELERİ VE YORUMLAR 
+   ========================================== *@
+    <section class="cs-panel rounded-3xl p-6 sm:p-8">
+        <details class="group [&_summary::-webkit-details-marker]:hidden">
+            <summary class="flex items-center justify-between cursor-pointer select-none">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-comments text-lg" style="color: var(--gold);"></i>
+                    <h3 class="cs-headline text-xl font-bold">Karakter Analizleri & Topluluk Yorumları</h3>
+                    @if (Model.Comments != null && Model.Comments.Any())
+                    {
+                        <span class="cs-pill text-xs px-2.5 py-0.5 rounded-full font-mono">@Model.Comments.Count</span>
+                    }
+                </div>
+                <div class="flex items-center gap-2 cs-pill px-3 py-1.5 rounded-full text-xs font-bold transition-all group-hover:border-[#F0B23C]">
+                    <span>Yorumları Göster / Gizle</span>
+                    <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:-rotate-180"></i>
+                </div>
+            </summary>
+
+            <div class="mt-6 pt-6 border-t space-y-4" style="border-color: #3A2A38;">
+                @if (Model.Comments != null && Model.Comments.Any())
+                {
+                    @foreach (var review in Model.Comments)
+                    {
+                        <div class="p-4 rounded-2xl space-y-2" style="background: var(--velvet); border: 1px solid #3A2A38;">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm" style="color: var(--ivory);">
+                                    @(string.IsNullOrEmpty(review.UserId) ? "Anonim Sinefil" : review.UserId)
+                                </span>
+                                <div class="flex items-center gap-1 font-mono text-xs font-bold" style="color: var(--gold);">
+                                    <i class="fa-solid fa-star text-[10px]"></i> @review.Score.ToString("0.0")
+                                </div>
+                            </div>
+                            <p class="text-xs sm:text-sm leading-relaxed cs-muted">
+                                @review.Comment
+                            </p>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-center py-6 text-xs cs-muted">
+                        Bu karakter için henüz yazılı bir analiz veya yorum bırakılmamış. İlk yorumu siz yazın!
+                    </p>
+                }
+            </div>
+        </details>
     </section>
 
 </div>

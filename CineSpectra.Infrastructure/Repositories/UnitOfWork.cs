@@ -21,6 +21,18 @@ namespace CineSpectra.Infrastructure.Repositories
         private IGenericRepository<Episode>? _episodes;
         public IGenericRepository<Episode> Episodes => _episodes ??= new GenericRepository<Episode>(_context);
 
+        private IActorRepository? _actors;
+        public IActorRepository Actors => _actors ??= new ActorRepository(_context);
+
+        private IGenericRepository<ActorRating>? _actorRatings;
+        public IGenericRepository<ActorRating> ActorRatings => _actorRatings ??= new GenericRepository<ActorRating>(_context);
+
+        private ICharacterRepository? _characters;
+        public ICharacterRepository Characters => _characters ??= new CharacterRepository(_context);
+
+        private IGenericRepository<CharacterRating>? _characterRatings;
+        public IGenericRepository<CharacterRating> CharacterRatings => _characterRatings ??= new GenericRepository<CharacterRating>(_context);
+
         public UnitOfWork(
             CineSpectraDbContext context,
             IShowRepository shows,

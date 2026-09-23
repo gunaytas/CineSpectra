@@ -1,0 +1,82 @@
+﻿@{
+    ViewData["Title"] = "Admin Kontrol Paneli";
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+    @* Başlık & Durum Rozeti *@
+    <div class="cs-panel rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border" style="border-color: #3A2A38;">
+        <div class="space-y-1 text-center sm:text-left">
+            <span class="cs-eyebrow block text-xs uppercase tracking-widest text-amber-400">YÖNETİM KONSOLU</span>
+            <h1 class="cs-headline text-2xl sm:text-3xl font-extrabold italic" style="color: var(--ivory);">
+                CineSpectra Genel Yönetimi
+            </h1>
+            <p class="text-xs cs-muted">
+                Kriter yapılandırmaları, veri tohumlama (seeder) tetikleyicileri ve içerik yönetimi.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <span class="cs-pill-gold px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved"></i> Admin Yetkisi Aktif
+            </span>
+        </div>
+    </div>
+
+    @* Yönetim Eylemleri Kartları *@
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        @* 1. Kriter Yönetimi *@
+        <div class="cs-card rounded-2xl p-6 space-y-4 border transition-all hover:-translate-y-1" style="border-color: #3A2A38;">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: var(--curtain); color: var(--gold);">
+                <i class="fa-solid fa-sliders text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-base" style="color: var(--ivory);">Oylama Kriterleri</h3>
+                <p class="text-xs cs-muted mt-1">
+                    Film, dizi, sezon, bölüm, aktör ve karakterler için ağırlıklı değerlendirme kriterlerini düzenleyin.
+                </p>
+            </div>
+            <a href="/Admin/Criteria" class="cs-btn-ghost w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+                <span>Kriterleri Yönet</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+
+        @* 2. TMDb Veri Besleyici *@
+        <div class="cs-card rounded-2xl p-6 space-y-4 border transition-all hover:-translate-y-1" style="border-color: #3A2A38;">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: var(--curtain); color: var(--gold);">
+                <i class="fa-solid fa-cloud-arrow-down text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-base" style="color: var(--ivory);">TMDb Seeder Motoru</h3>
+                <p class="text-xs cs-muted mt-1">
+                    TMDb API üzerinden güncel popüler yapımları, sezonları ve kadroları veritabanına otomatik aktarın.
+                </p>
+            </div>
+            <a href="/Admin/Seeder" class="cs-btn-ghost w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+                <span>Veri Besleyiciyi Aç</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+
+        @* 3. Kullanıcı ve Oylama Denetimi *@
+        <div class="cs-card rounded-2xl p-6 space-y-4 border transition-all hover:-translate-y-1" style="border-color: #3A2A38;">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: var(--curtain); color: var(--gold);">
+                <i class="fa-solid fa-users-gear text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-base" style="color: var(--ivory);">Kullanıcılar & Denetim</h3>
+                <p class="text-xs cs-muted mt-1">
+                    Kayıtlı kullanıcı hesaplarını inceleyin, moderasyon işlemlerini gerçekleştirin ve rolleri yönetin.
+                </p>
+            </div>
+            <a href="/Admin/Users" class="cs-btn-ghost w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+                <span>Kullanıcıları İncele</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+
+    </div>
+
+</div>

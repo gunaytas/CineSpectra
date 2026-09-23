@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using CineSpectra.Domain.Entities;
+﻿using CineSpectra.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace CineSpectra.Infrastructure.Persistence;
 
-public class CineSpectraDbContext : DbContext
+public class CineSpectraDbContext : IdentityDbContext<AppUser, AppRole, string>
 {
     public CineSpectraDbContext(DbContextOptions<CineSpectraDbContext> options) : base(options)
     {

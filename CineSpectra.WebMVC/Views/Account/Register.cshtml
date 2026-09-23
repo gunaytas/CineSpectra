@@ -1,0 +1,97 @@
+﻿@model CineSpectra.Application.DTOs.RegisterDto
+@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<div class="min-h-[75vh] flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md space-y-6">
+
+        @* Üst Logo / Başlık *@
+        <div class="text-center space-y-2">
+            <span class="cs-eyebrow tracking-widest text-xs uppercase block">CINESPECTRA TOPLULUĞU</span>
+            <h1 class="text-3xl font-extrabold italic" style="color: var(--ivory);">
+                Aramıza Katılın
+            </h1>
+            <p class="text-xs cs-muted">
+                Filmleri, dizileri ve karakterleri granüler kriterlerle puanlamaya başlayın.
+            </p>
+        </div>
+
+        @* Kayıt Kartı *@
+        <div class="cs-panel rounded-3xl p-6 sm:p-8 space-y-6 border" style="border-color: #3A2A38;">
+            <form asp-controller="Account" asp-action="Register" method="post" class="space-y-4">
+
+                <div asp-validation-summary="ModelOnly" class="text-xs text-red-400 p-3 rounded-xl bg-red-950/30 border border-red-900/50"></div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold cs-muted uppercase tracking-wider">Ad Soyad (İsteğe Bağlı)</label>
+                    <div class="relative">
+                        <i class="fa-regular fa-id-card absolute left-4 top-1/2 -translate-y-1/2 text-xs cs-muted"></i>
+                        <input asp-for="FullName"
+                               placeholder="Adınız Soyadınız"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                               style="background: var(--velvet); border: 1px solid #3A2A38; color: var(--ivory);" />
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold cs-muted uppercase tracking-wider">Kullanıcı Adı</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-at absolute left-4 top-1/2 -translate-y-1/2 text-xs cs-muted"></i>
+                        <input asp-for="UserName"
+                               placeholder="kullanici_adiniz"
+                               required
+                               autocomplete="username"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                               style="background: var(--velvet); border: 1px solid #3A2A38; color: var(--ivory);" />
+                    </div>
+                    <span asp-validation-for="UserName" class="text-[11px] text-red-400"></span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold cs-muted uppercase tracking-wider">E-Posta Adresi</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-xs cs-muted"></i>
+                        <input asp-for="Email"
+                               type="email"
+                               placeholder="ornek@cinespectra.com"
+                               required
+                               autocomplete="email"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                               style="background: var(--velvet); border: 1px solid #3A2A38; color: var(--ivory);" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-[11px] text-red-400"></span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold cs-muted uppercase tracking-wider">Şifre (En az 6 karakter)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-xs cs-muted"></i>
+                        <input asp-for="Password"
+                               type="password"
+                               placeholder="••••••••"
+                               required
+                               autocomplete="new-password"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                               style="background: var(--velvet); border: 1px solid #3A2A38; color: var(--ivory);" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-[11px] text-red-400"></span>
+                </div>
+
+                <button type="submit"
+                        class="cs-btn-primary w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg mt-2">
+                    <i class="fa-solid fa-user-plus text-xs"></i>
+                    <span>Hesap Oluştur</span>
+                </button>
+            </form>
+
+            <div class="border-t pt-4 text-center text-xs cs-muted" style="border-color: #3A2A38;">
+                Zaten bir hesabınız var mı?
+                <a href="/Account/Login" class="font-bold hover:underline ml-1" style="color: var(--gold);">
+                    Giriş Yapın
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>

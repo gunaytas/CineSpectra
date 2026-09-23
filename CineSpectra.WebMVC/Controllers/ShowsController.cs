@@ -1,7 +1,9 @@
 ﻿using CineSpectra.Domain.Enums;
 using CineSpectra.WebMVC.Models;
 using CineSpectra.WebMVC.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 
 namespace CineSpectra.WebMVC.Controllers;
 
@@ -25,6 +27,43 @@ public class ShowsController : Controller
         return View(model);
     }
 
+    [HttpGet("shows/movies")]
+    public async Task<IActionResult> Movies(string? sortBy)
+    {
+        ViewBag.CurrentSort = sortBy ?? "top-rated";
+
+        var movies = await _apiService.GetMoviesAsync();
+
+        // İsteğe bağlı sıralama opsiyonları
+        movies = sortBy switch
+        {
+            "newest" => movies.OrderByDescending(m => m.ReleaseDate).ToList(),
+            "title" => movies.OrderBy(m => m.Title).ToList(),
+            _ => movies.OrderByDescending(m => m.AverageScore).ToList() // Varsayılan: En Yüksek Puan
+        };
+
+        return View(movies);
+    }
+
+    [HttpGet("shows/tvshows")]
+    public async Task<IActionResult> TvShows(string? sortBy)
+    {
+        ViewBag.CurrentSort = sortBy ?? "top-rated";
+
+        var tvShows = await _apiService.GetTvShowsAsync();
+
+        // Sıralama opsiyonları
+        tvShows = sortBy switch
+        {
+            "newest" => tvShows.OrderByDescending(s => s.ReleaseDate).ToList(),
+            "title" => tvShows.OrderBy(s => s.Title).ToList(),
+            _ => tvShows.OrderByDescending(s => s.AverageScore).ToList() // Varsayılan: En Yüksek Kriter/Puan
+        };
+
+        return View(tvShows);
+    }
+
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> SubmitRating([FromBody] SubmitRatingViewModel ratingModel)
     {
@@ -39,6 +78,7 @@ public class ShowsController : Controller
         return StatusCode(500, "Oylama kaydedilirken bir hata oluştu.");
     }
 
+    [Authorize]
     [HttpGet("Shows/{id:int}/Rate")]
     public async Task<IActionResult> Rate(int id)
     {
@@ -85,6 +125,7 @@ public class ShowsController : Controller
     }
 
 
+    [Authorize]
     [HttpPost("Shows/SubmitFullRating")]
     public async Task<IActionResult> SubmitFullRating([FromBody] SubmitFullRatingInputModel input)
     {
@@ -99,7 +140,7 @@ public class ShowsController : Controller
         return StatusCode(500, "Oylama veritabanına işlenemedi.");
     }
 
-
+    [Authorize]
     [HttpPost("Shows/SubmitInlineEpisodeRating")]
     public async Task<IActionResult> SubmitInlineEpisodeRating([FromBody] InlineEntityVoteInputModel input)
     {
@@ -114,6 +155,7 @@ public class ShowsController : Controller
         return BadRequest(new { success = false, message });
     }
 
+    [Authorize]
     [HttpGet("Shows/{id:int}/RateEpisode")]
     public async Task<IActionResult> RateEpisode(int id)
     {
@@ -144,6 +186,13 @@ public class ShowsController : Controller
             }).ToList() ?? new()
         };
 
+        return View(model);
+    }
+
+    [HttpGet("shows/search")]
+    public async Task<IActionResult> Search(string? q, string? tab)
+    {
+        var model = await _apiService.MultiSearchAsync(q ?? string.Empty, tab ?? "all");
         return View(model);
     }
 

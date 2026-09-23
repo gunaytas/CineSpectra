@@ -16,12 +16,6 @@ namespace CineSpectra.Application.Services
 
         public async Task<RatingResultDto> SubmitShowRatingAsync(CreateShowRatingDto dto)
         {
-            // TEST USER KODU
-            if (string.IsNullOrWhiteSpace(dto.UserId))
-            {
-                dto.UserId = "test-user-1";
-            }
-
             var show = await _unitOfWork.Shows.GetByIdAsync(dto.ShowId);
             if (show == null)
                 return new RatingResultDto { IsSuccess = false, Message = "Yapım bulunamadı." };
@@ -105,11 +99,6 @@ namespace CineSpectra.Application.Services
 
         public async Task<RatingResultDto> SubmitEpisodeRatingAsync(int episodeId, int showId, double score, string? userId)
         {
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                userId = "test-user-1";
-            }
-
             var episode = await _unitOfWork.Episodes.GetByIdAsync(episodeId);
             var show = await _unitOfWork.Shows.GetByIdAsync(showId);
             if (episode == null || show == null)

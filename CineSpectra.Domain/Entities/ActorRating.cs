@@ -14,8 +14,8 @@ public class ActorRating : BaseEntity
     public int ActorId { get; set; }
     public Actor Actor { get; set; } = null!;
 
-    public int CriteriaId { get; set; }
-    public RatingCriteria Criteria { get; set; } = null!;
+    public int? CriteriaId { get; set; }
+    public RatingCriteria? Criteria { get; set; } = null!;
 
     public int Score { get; set; }
     public string? Comment { get; set; }

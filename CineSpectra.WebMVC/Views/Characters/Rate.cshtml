@@ -1,0 +1,324 @@
+﻿@model CineSpectra.WebMVC.Models.CharacterRateViewModel
+@{
+    ViewData["Title"] = $"{Model.Name} — Karakteri Puanla";
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+    @* 1. KARAKTER KÜNYE BİLGİSİ *@
+    <div class="cs-panel rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border" style="border-color: #3A2A38;">
+        <div class="flex items-center gap-4">
+            <div class="cs-card w-16 sm:w-20 aspect-[2/3] rounded-xl overflow-hidden flex-shrink-0 shadow-lg">
+                <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/default-avatar.jpg" : Model.ImageUrl)"
+                     alt="@Model.Name" class="w-full h-full object-cover" />
+            </div>
+            <div>
+                <span class="cs-eyebrow block mb-1">KARAKTER ANALİZİ VE DEĞERLENDİRME</span>
+                <h1 class="cs-headline text-xl sm:text-2xl font-extrabold italic" style="color: var(--ivory);">
+                    @Model.Name
+                </h1>
+                <div class="flex items-center gap-3 text-xs cs-muted mt-1">
+                    @if (!string.IsNullOrEmpty(Model.ActorName))
+                    {
+                        <span>Canlandıran: <strong style="color: var(--ivory);">@Model.ActorName</strong></span>
+                        <span>&bull;</span>
+                    }
+                    <span class="flex items-center gap-1 font-bold text-amber-400">
+                        <i class="fa-solid fa-star text-[10px]"></i> @Model.CurrentAverageScore.ToString("0.0")
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <a href="/Characters/@Model.CharacterId" class="cs-btn-ghost text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 flex-shrink-0">
+            <i class="fa-solid fa-arrow-left text-xs"></i> Karakter Detayına Dön
+        </a>
+    </div>
+
+    @* 2. HIZLI PUANLAMA *@
+    <div id="quick-rating-box" class="cs-panel rounded-3xl p-6 sm:p-8 space-y-4 border transition-all duration-300" style="border-color: #3A2A38;">
+        <div class="flex justify-between items-center">
+            <div>
+                <span class="cs-eyebrow block mb-1">HIZLI PUANLAMA</span>
+                <h2 class="text-lg font-bold" style="color: var(--ivory);">Tek Tıkla Puanlayın</h2>
+            </div>
+            <button type="button" id="reset-mode-btn" onclick="resetVotingMode()" class="text-xs text-amber-400 hover:underline hidden">
+                <i class="fa-solid fa-rotate-left"></i> Seçimi Sıfırla
+            </button>
+        </div>
+
+        <div class="flex items-center gap-1.5 sm:gap-2 justify-center py-2 flex-wrap">
+            @for (int i = 1; i <= 10; i++)
+            {
+                <button type="button" onclick="selectQuickScore(@i)" id="quick-btn-@i"
+                        class="quick-rate-btn w-9 h-9 sm:w-11 sm:h-11 rounded-xl font-mono text-sm font-bold flex items-center justify-center transition-all"
+                        style="background: var(--curtain); border: 1px solid #3A2A38; color: var(--ivory);">
+                    @i
+                </button>
+            }
+        </div>
+    </div>
+
+    @* 3. DETAYLI KRİTER PUANLAMA *@
+    <div id="criteria-rating-box" class="cs-panel rounded-3xl p-6 sm:p-8 space-y-5 border transition-all duration-300" style="border-color: #3A2A38;">
+        <div class="flex justify-between items-center">
+            <div>
+                <span class="cs-eyebrow block mb-1">KARAKTER DERİNLİĞİ</span>
+                <h2 class="text-lg font-bold" style="color: var(--ivory);">Detaylı Kriter Puanlama</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <button type="button" id="reset-criteria-btn" onclick="resetVotingMode()" class="text-xs text-amber-400 hover:underline hidden">
+                    <i class="fa-solid fa-rotate-left"></i> Seçimi Sıfırla
+                </button>
+                <div class="text-sm font-bold" style="color: var(--gold);">
+                    Ortalama: <span id="calculated-weighted-score">—</span> / 10
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            @if (Model.Criterias != null && Model.Criterias.Any())
+            {
+                @foreach (var criteria in Model.Criterias)
+                {
+                    <div class="p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                         style="background: var(--velvet); border: 1px solid #3A2A38;">
+                        <span class="text-sm font-medium" style="color: var(--ivory);">@criteria.Name</span>
+
+                        <input type="hidden" id="criteria-input-@criteria.CriteriaId" data-criteria-id="@criteria.CriteriaId" data-weight="@criteria.Weight" value="" />
+
+                        <div class="flex items-center gap-1 flex-wrap">
+                            @for (int s = 1; s <= 10; s++)
+                            {
+                                <button type="button" onclick="selectCriteriaScore(@criteria.CriteriaId, @s)"
+                                        id="criteria-btn-@(criteria.CriteriaId)-@s"
+                                        class="criteria-score-btn-@criteria.CriteriaId w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-mono text-xs font-bold transition-all"
+                                        style="background: var(--curtain); border: 1px solid #3A2A38; color: var(--ivory);">
+                                    @s
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-6 text-xs cs-muted">
+                    Karakter için tanımlanmış oylama kriteri bulunamadı.
+                </div>
+            }
+        </div>
+    </div>
+
+    @* 4. YORUM VE KAYDET *@
+    <div class="cs-panel rounded-3xl p-6 sm:p-8 space-y-4 border" style="border-color: #3A2A38;">
+        <label for="review-comment" class="cs-eyebrow block">Karakter Analiziniz & Düşünceleriniz (İsteğe Bağlı)</label>
+        <textarea id="review-comment" rows="3"
+                  class="w-full rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                  style="background: var(--velvet); border: 1px solid #3A2A38; color: var(--ivory);"
+                  placeholder="Karakterin hikaye içindeki derinliği, motivasyonları ve gelişimi hakkında ne düşünüyorsunuz?"></textarea>
+
+        <div class="flex justify-end pt-2">
+            <button type="button" id="submit-btn" onclick="submitRating()"
+                    class="cs-btn-primary text-sm font-bold px-8 py-3 rounded-xl flex items-center gap-2 shadow-lg">
+                <i class="fa-solid fa-check"></i> Oylamayı Kaydet
+            </button>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        const characterId = @Model.CharacterId;
+        let currentMode = null;
+        let selectedQuickScore = null;
+
+        function setMode(mode) {
+            currentMode = mode;
+            const quickBox = document.getElementById('quick-rating-box');
+            const criteriaBox = document.getElementById('criteria-rating-box');
+            const resetQuickBtn = document.getElementById('reset-mode-btn');
+            const resetCriteriaBtn = document.getElementById('reset-criteria-btn');
+
+            if (mode === 'quick') {
+                criteriaBox.style.opacity = '0.35';
+                criteriaBox.style.pointerEvents = 'none';
+                quickBox.style.opacity = '1';
+                quickBox.style.pointerEvents = 'auto';
+
+                resetQuickBtn?.classList.remove('hidden');
+                resetCriteriaBtn?.classList.add('hidden');
+            } else if (mode === 'criteria') {
+                quickBox.style.opacity = '0.35';
+                quickBox.style.pointerEvents = 'none';
+                criteriaBox.style.opacity = '1';
+                criteriaBox.style.pointerEvents = 'auto';
+
+                resetCriteriaBtn?.classList.remove('hidden');
+                resetQuickBtn?.classList.add('hidden');
+            }
+        }
+
+        function resetVotingMode() {
+            currentMode = null;
+            selectedQuickScore = null;
+
+            const quickBox = document.getElementById('quick-rating-box');
+            const criteriaBox = document.getElementById('criteria-rating-box');
+            quickBox.style.opacity = '1';
+            quickBox.style.pointerEvents = 'auto';
+            criteriaBox.style.opacity = '1';
+            criteriaBox.style.pointerEvents = 'auto';
+
+            document.getElementById('reset-mode-btn')?.classList.add('hidden');
+            document.getElementById('reset-criteria-btn')?.classList.add('hidden');
+
+            document.querySelectorAll('.quick-rate-btn').forEach(btn => {
+                btn.style.background = "var(--curtain)";
+                btn.style.color = "var(--ivory)";
+                btn.style.borderColor = "#3A2A38";
+                btn.classList.remove('scale-110');
+            });
+
+            document.querySelectorAll('input[data-criteria-id]').forEach(input => input.value = "");
+            document.querySelectorAll('[class*="criteria-score-btn-"]').forEach(btn => {
+                btn.style.background = "var(--curtain)";
+                btn.style.color = "var(--ivory)";
+                btn.style.borderColor = "#3A2A38";
+            });
+
+            document.getElementById('calculated-weighted-score').innerText = "—";
+        }
+
+        function selectQuickScore(score) {
+            setMode('quick');
+            selectedQuickScore = score;
+
+            document.querySelectorAll('.quick-rate-btn').forEach(btn => {
+                btn.style.background = "var(--curtain)";
+                btn.style.borderColor = "#3A2A38";
+                btn.style.color = "var(--ivory)";
+                btn.classList.remove('scale-110');
+            });
+
+            const activeBtn = document.getElementById(`quick-btn-${score}`);
+            if (activeBtn) {
+                activeBtn.style.background = "var(--gold)";
+                activeBtn.style.borderColor = "var(--gold)";
+                activeBtn.style.color = "var(--velvet)";
+                activeBtn.classList.add('scale-110');
+            }
+        }
+
+        function selectCriteriaScore(criteriaId, score) {
+            setMode('criteria');
+
+            const hiddenInput = document.getElementById(`criteria-input-${criteriaId}`);
+            if (hiddenInput) hiddenInput.value = score;
+
+            document.querySelectorAll(`.criteria-score-btn-${criteriaId}`).forEach(btn => {
+                btn.style.background = "var(--curtain)";
+                btn.style.borderColor = "#3A2A38";
+                btn.style.color = "var(--ivory)";
+            });
+
+            const activeBtn = document.getElementById(`criteria-btn-${criteriaId}-${score}`);
+            if (activeBtn) {
+                activeBtn.style.background = "var(--gold)";
+                activeBtn.style.borderColor = "var(--gold)";
+                activeBtn.style.color = "var(--velvet)";
+            }
+
+            recalculateWeighted();
+        }
+
+        function recalculateWeighted() {
+            const inputs = Array.from(document.querySelectorAll('input[data-criteria-id]'))
+                .filter(i => i.value !== "");
+
+            if (inputs.length === 0) {
+                document.getElementById('calculated-weighted-score').innerText = "—";
+                return;
+            }
+
+            let totalWeight = 0;
+            let weightedSum = 0;
+
+            inputs.forEach(input => {
+                const weight = parseFloat(input.getAttribute('data-weight')) || 1;
+                const score = parseFloat(input.value) || 0;
+                weightedSum += (score * weight);
+                totalWeight += weight;
+            });
+
+            const finalAvg = totalWeight > 0 ? (weightedSum / totalWeight).toFixed(1) : "—";
+            document.getElementById('calculated-weighted-score').innerText = finalAvg;
+        }
+
+        async function submitRating() {
+            if (!currentMode) {
+                alert("Lütfen önce hızlı bir puan belirleyin veya kriterleri oylayın.");
+                return;
+            }
+
+            let overallScore = 0;
+            const subRatings = [];
+            const isDetailed = (currentMode === 'criteria');
+
+            if (isDetailed) {
+                const inputs = Array.from(document.querySelectorAll('input[data-criteria-id]'))
+                    .filter(i => i.value !== "");
+
+                if (inputs.length === 0) {
+                    alert("Lütfen en az bir kriter için puan verin.");
+                    return;
+                }
+
+                inputs.forEach(input => {
+                    subRatings.push({
+                        criteriaId: parseInt(input.getAttribute('data-criteria-id')),
+                        score: parseFloat(input.value)
+                    });
+                });
+
+                overallScore = parseFloat(document.getElementById('calculated-weighted-score').innerText);
+            } else {
+                overallScore = selectedQuickScore;
+            }
+
+            const payload = {
+                characterId: characterId,
+                overallScore: overallScore,
+                isDetailed: isDetailed,
+                comment: document.getElementById('review-comment')?.value || null,
+                subRatings: subRatings
+            };
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gönderiliyor...';
+
+            try {
+                const response = await fetch('/Characters/SubmitRating', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert('Karakter oylamanız başarıyla kaydedildi!');
+                    window.location.href = `/Characters/${characterId}`;
+                } else {
+                    alert('Puan gönderilirken bir hata oluştu.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Bağlantı hatası oluştu.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Oylamayı Kaydet';
+            }
+        }
+    </script>
+}

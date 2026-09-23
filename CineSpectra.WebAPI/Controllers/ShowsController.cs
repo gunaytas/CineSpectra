@@ -46,6 +46,8 @@ namespace CineSpectra.WebAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetShowDetail(int id)
         {
+            string? userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
             var result = await _showService.GetShowDetailAsync(id);
 
             if (result == null)
